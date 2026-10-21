@@ -1,10 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Heart,
   Skull,
-  Wrench,
-  Stethoscope,
-  Compass,
   AlertCircle,
   Users,
   Layers,
@@ -25,6 +21,7 @@ import { StoryletBranch, Storylet } from './engine/qbn/types';
 import { handleMissInterruptTrigger, resolveInterruptCrisis } from './engine/interruptEngine';
 import { ShiftDial } from './components/slate/ShiftDial';
 import { executeShiftAdvance } from './engine/shifts';
+import { RosterView } from './components/roster/RosterView';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
@@ -314,60 +311,23 @@ export const App: React.FC = () => {
         )}
 
         {activeTab === 'roster' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-noir-border pb-3">
-              <div>
-                <h3 className="font-bold text-base text-noir-chalk font-mono">AGENCY DOSSIER // 15 OPERATIVES</h3>
-                <p className="text-xs text-noir-muted">Manage active field deployment and safehouse workstations.</p>
-              </div>
-              <div className="text-xs font-mono text-zinc-400">
-                ACTIVE: {roster.filter(r => r.status === 'ACTIVE').length} | CASUALTIES: {roster.filter(r => r.status === 'DEAD').length}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-h-[50vh] overflow-y-auto pr-1">
-              {roster.map((op) => {
-                const isDead = op.status === 'DEAD';
-                return (
-                  <div 
-                    key={op.id} 
-                    className={`p-3 rounded border text-xs space-y-2 ${
-                      isDead 
-                        ? 'border-crisis/40 bg-crisis/5 opacity-50' 
-                        : 'border-noir-border bg-noir-ink/60 hover:border-hazard/60'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between font-bold font-mono">
-                      <span className={isDead ? 'line-through text-crisis' : 'text-noir-chalk'}>
-                        {op.name}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-hazard">
-                        {op.callsign}
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-noir-muted flex items-center justify-between font-mono">
-                      <span>{op.role}</span>
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-3 h-3 text-red-400" />
-                        {op.hp}/{op.maxHp}
-                      </span>
-                    </div>
-                    {op.activeAssignment && (
-                      <div className="text-[10px] p-1.5 rounded bg-noir-surface border border-noir-border flex items-center gap-1.5 text-hazard font-mono">
-                        {op.activeAssignment.type === 'FORGE' && <Wrench className="w-3 h-3" />}
-                        {op.activeAssignment.type === 'INFIRMARY' && <Stethoscope className="w-3 h-3" />}
-                        {op.activeAssignment.type === 'SCOUT' && <Compass className="w-3 h-3" />}
-                        <span>{op.activeAssignment.type}: {op.activeAssignment.progress}/{op.activeAssignment.maxProgress}</span>
-                      </div>
-                    )}
-                    <div className="text-[10px] text-zinc-400 italic truncate font-mono" title={op.loyaltyPerk}>
-                      Perk: {op.loyaltyPerk}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <RosterView
+            roster={roster}
+            activeCompanionId={storeState.activeCompanionId}
+            onDeployCompanion={(id) => storeState.setActiveCompanion(id)}
+            onAssignWorkstation={(id, type) => {
+              storeState.assignOperative(id, {
+                type,
+                target: type === 'FORGE' 
+                  ? 'Fabricating Reinforced Plating' 
+                  : type === 'INFIRMARY' 
+                  ? 'Trauma Recovery & Treatment' 
+                  : 'Mapping Sub-level Transit Spoke',
+                progress: 0,
+                maxProgress: 3,
+              });
+            }}
+          />
         )}
 
         {activeTab === 'bar' && (
