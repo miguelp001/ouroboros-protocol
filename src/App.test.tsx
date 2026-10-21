@@ -5,13 +5,13 @@ import App from './App';
 describe('Diegetic Slate App Scaffolding', () => {
   it('renders the diegetic HUD header and active sector', () => {
     render(<App />);
-    expect(screen.getByText(/OUROBOROS v4.18 \/\/ DIEGETIC HUD/i)).toBeInTheDocument();
+    expect(screen.getByText(/OUROBOROS SLATE-4B/i)).toBeInTheDocument();
     expect(screen.getByText(/THE SUBMERGED SPUR \/\/ PONTOON JUNCTION/i)).toBeInTheDocument();
   });
 
   it('allows switching between navigation tabs', () => {
     render(<App />);
-    const mapTab = screen.getByRole('button', { name: /02 \/\/ TRANSIT MAP/i });
+    const mapTab = screen.getByRole('button', { name: /02 \/\/ TRANSIT/i });
     fireEvent.click(mapTab);
     expect(screen.getByText(/VIGNELLI TRANSIT SCHEMATIC/i)).toBeInTheDocument();
   });
