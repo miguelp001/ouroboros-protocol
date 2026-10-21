@@ -1,4 +1,4 @@
-import { GameEngineState, Operative, Faction } from '../types';
+import { GameEngineState, Operative, Faction, NodeAnomaly } from '../types';
 
 export const INITIAL_OPERATIVES: Operative[] = [
   // The Sole Initial Companion (Fellow Scrapper who escaped with Agent 0)
@@ -318,6 +318,27 @@ export const INITIAL_FACTIONS: Record<string, Faction> = {
   },
 };
 
+export const INITIAL_NODE_ANOMALIES: Record<string, NodeAnomaly> = {
+  'H-01': { nodeId: 'H-01', tier: 1, entityName: 'Corporate Biometric Echo', isMobile: false, contained: false },
+  'H-02': { nodeId: 'H-02', tier: 1, entityName: 'Photosynthetic Distortion', isMobile: false, contained: false },
+  'H-03': { nodeId: 'H-03', tier: 2, entityName: 'Chrono-Lapse Transit Loop', isMobile: false, contained: false },
+  'C-04': { nodeId: 'C-04', tier: 2, entityName: 'Acoustic Spatial Reflection', isMobile: false, contained: false },
+  'S-01': { nodeId: 'S-01', tier: 3, entityName: 'Tier 3 Shifting Hound', isMobile: true, contained: false },
+  'S-02': { nodeId: 'S-02', tier: 3, entityName: 'Brackish Entity Echoes', isMobile: false, contained: false },
+  'S-03': { nodeId: 'S-03', tier: 4, entityName: 'Submerged Anomaly Altar', isMobile: false, contained: false },
+  'OT-01': { nodeId: 'OT-01', tier: 1, entityName: 'Static Scrap Mirage', isMobile: false, contained: false },
+  'OT-02': { nodeId: 'OT-02', tier: 2, entityName: 'Magnetic Spatial Pinch', isMobile: false, contained: false },
+  'OT-03': { nodeId: 'OT-03', tier: 2, entityName: 'Residual Phantom Voice', isMobile: false, contained: false },
+  'OT-04': { nodeId: 'OT-04', tier: 3, entityName: 'Locomotive Poltergeist', isMobile: false, contained: false },
+  'R-01': { nodeId: 'R-01', tier: 1, entityName: 'Ballistic Echo', isMobile: false, contained: false },
+  'R-02': { nodeId: 'R-02', tier: 2, entityName: 'Vibrational Metal Fatigue', isMobile: false, contained: false },
+  'R-03': { nodeId: 'R-03', tier: 2, entityName: 'Fortress Temporal Delay', isMobile: false, contained: false },
+  'X-01': { nodeId: 'X-01', tier: 3, entityName: 'Slag Vapor Wraith', isMobile: false, contained: false },
+  'X-02': { nodeId: 'X-02', tier: 4, entityName: 'Tier 4 Pale Shapeshifter', isMobile: true, contained: false },
+  'X-03': { nodeId: 'X-03', tier: 5, entityName: 'Tier 5 Reality Tear', isMobile: false, contained: false },
+  'THE_BAR': { nodeId: 'THE_BAR', tier: 0, entityName: 'Sanctuary Reality Anchor', isMobile: false, contained: true },
+};
+
 export const INITIAL_GAME_STATE: GameEngineState = {
   agentZero: {
     stats: { scrap: 2, cover: 1, reckon: 0, tether: -1 },
@@ -364,4 +385,5 @@ export const INITIAL_GAME_STATE: GameEngineState = {
   isGameOver: false,
   gameOverReason: null,
   lastExtractionNotice: null,
+  nodeAnomalies: INITIAL_NODE_ANOMALIES,
 };

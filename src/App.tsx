@@ -29,6 +29,7 @@ import { VignelliMap } from './components/map/VignelliMap';
 import { NodeTelemetryCard } from './components/map/NodeTelemetryCard';
 import { HostilityMonitor } from './components/hostility/HostilityMonitor';
 import { FactionFrontsMonitor } from './components/factions/FactionFrontsMonitor';
+import { AnomalyEcologyMonitor } from './components/anomalies/AnomalyEcologyMonitor';
 import { GameOverModal } from './components/modals/GameOverModal';
 import { CatastrophicExtractionModal } from './components/modals/CatastrophicExtractionModal';
 import { WakeTollgateModal } from './components/modals/WakeTollgateModal';
@@ -39,7 +40,7 @@ import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
   const [barSubView, setBarSubView] = useState<'taproom' | 'safehouse'>('taproom');
-  const [mapSubView, setMapSubView] = useState<'vignelli' | 'hostility' | 'fronts'>('vignelli');
+  const [mapSubView, setMapSubView] = useState<'vignelli' | 'hostility' | 'fronts' | 'anomalies'>('vignelli');
   const [currentRoll, setCurrentRoll] = useState<DetailedRollResult | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [requestHelpOut, setRequestHelpOut] = useState(true);
@@ -228,24 +229,34 @@ export const App: React.FC = () => {
               isInterrupt={isInterrupt}
               onAdvanceShift={() => {
                 const rep = executeShiftAdvance({ isRestingAtBar: false });
+                const notes: string[] = [];
                 if (rep.factionEvents && rep.factionEvents.length > 0) {
                   const advances = rep.factionEvents.filter(e => e.advancedSegments > 0);
                   if (advances.length > 0) {
-                    setLastBranchNarrative(
-                      `[DAWN FACTION RECON] Enemy movements recorded: ${advances.map(a => `${a.factionName} (+${a.advancedSegments})`).join(', ')}.`
-                    );
+                    notes.push(`Factions: ${advances.map(a => `${a.factionName} (+${a.advancedSegments})`).join(', ')}`);
                   }
+                }
+                if (rep.anomalyMigrations && rep.anomalyMigrations.length > 0) {
+                  notes.push(`Anomalies Stalking: ${rep.anomalyMigrations.map(m => `${m.entityName} -> ${m.newNodeId}`).join(', ')}`);
+                }
+                if (notes.length > 0) {
+                  setLastBranchNarrative(`[DAWN TELEMETRY] ${notes.join(' // ')}.`);
                 }
               }}
               onRestAtBar={() => {
                 const rep = executeShiftAdvance({ isRestingAtBar: true });
+                const notes: string[] = [];
                 if (rep.factionEvents && rep.factionEvents.length > 0) {
                   const advances = rep.factionEvents.filter(e => e.advancedSegments > 0);
                   if (advances.length > 0) {
-                    setLastBranchNarrative(
-                      `[DAWN RECON OVERVIEW] While resting at the Threshold Bar: ${advances.map(a => `${a.factionName} (+${a.advancedSegments})`).join(', ')}.`
-                    );
+                    notes.push(`Factions: ${advances.map(a => `${a.factionName} (+${a.advancedSegments})`).join(', ')}`);
                   }
+                }
+                if (rep.anomalyMigrations && rep.anomalyMigrations.length > 0) {
+                  notes.push(`Anomalies Stalking: ${rep.anomalyMigrations.map(m => `${m.entityName} -> ${m.newNodeId}`).join(', ')}`);
+                }
+                if (notes.length > 0) {
+                  setLastBranchNarrative(`[DAWN SANCTUARY RECON] While resting at the Bar: ${notes.join(' // ')}.`);
                 }
                 setActiveTab('bar');
               }}
@@ -359,14 +370,18 @@ export const App: React.FC = () => {
                     ? 'VIGNELLI TRANSIT SCHEMATIC' 
                     : mapSubView === 'hostility' 
                     ? 'REGIONAL HOSTILITY & PATROL MONITOR'
-                    : 'FACTION AGENDAS // PbtA FRONT CLOCKS'}
+                    : mapSubView === 'fronts'
+                    ? 'FACTION AGENDAS // PbtA FRONT CLOCKS'
+                    : 'ANOMALY ECOLOGY // CONTAINMENT & RESEARCH'}
                 </h3>
                 <p className="text-xs text-noir-muted">
                   {mapSubView === 'vignelli'
                     ? 'Sub-surface transit lines and regional anomaly clusters.'
                     : mapSubView === 'hostility'
                     ? 'Heat levels, suspicion thresholds, and Kill Squad telemetry.'
-                    : '6-segment objective clocks evaluated daily at DAWN.'}
+                    : mapSubView === 'fronts'
+                    ? '6-segment objective clocks evaluated daily at DAWN.'
+                    : 'Tiers 1-5 anomaly tracking, mobile stalkers, and containment ops.'}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -410,6 +425,19 @@ export const App: React.FC = () => {
                   >
                     FACTION FRONTS
                   </button>
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setMapSubView('anomalies');
+                    }}
+                    className={`px-3 py-1 rounded transition-colors ${
+                      mapSubView === 'anomalies' 
+                        ? 'bg-hazard text-noir-ink font-bold' 
+                        : 'text-noir-muted hover:text-noir-chalk'
+                    }`}
+                  >
+                    ANOMALIES
+                  </button>
                 </div>
               </div>
             </div>
@@ -446,13 +474,15 @@ export const App: React.FC = () => {
                 digitalCred={storeState.economy.digitalCred}
                 activeCompanionId={storeState.activeCompanionId}
               />
-            ) : (
+            ) : mapSubView === 'fronts' ? (
               <FactionFrontsMonitor
                 factions={storeState.factions}
                 heatMap={storeState.economy.heat}
                 chipCred={storeState.economy.chipCred}
                 digitalCred={storeState.economy.digitalCred}
               />
+            ) : (
+              <AnomalyEcologyMonitor />
             )}
           </div>
         )}

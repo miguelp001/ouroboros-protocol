@@ -5,6 +5,7 @@ import { Shift } from '../types';
 import { useGameStore } from './store';
 import { soundFx } from '../audio/soundFx';
 import { applyNaturalHeatDecay } from './hostilityEngine';
+import { processDailyAnomalyEcology, AnomalyMigrationEvent } from './anomalyEngine';
 
 export interface ShiftTransitionReport {
   previousShift: Shift;
@@ -14,6 +15,7 @@ export interface ShiftTransitionReport {
   restedAtBar: boolean;
   completedWorkstations: string[];
   factionEvents: Array<{ factionName: string; roll: number; advancedSegments: number }>;
+  anomalyMigrations?: AnomalyMigrationEvent[];
 }
 
 export function executeShiftAdvance(options?: {
@@ -80,8 +82,9 @@ export function executeShiftAdvance(options?: {
     };
   });
 
-  // Daily Dawn Faction Clock Evaluation
+  // Daily Dawn Faction Clock & Anomaly Ecology Evaluation
   let factionEvents: Array<{ factionName: string; roll: number; advancedSegments: number }> = [];
+  let anomalyMigrations: AnomalyMigrationEvent[] = [];
   if (nextShift === 'DAWN') {
     const factionResults = store.advanceFactionClocks();
     factionEvents = Object.entries(factionResults).map(([fId, res]) => ({
@@ -89,6 +92,9 @@ export function executeShiftAdvance(options?: {
       roll: res.roll,
       advancedSegments: res.advancedSegments,
     }));
+
+    const anomalyReport = processDailyAnomalyEcology();
+    anomalyMigrations = anomalyReport.migrations;
   }
 
   // Rest benefits
@@ -122,5 +128,6 @@ export function executeShiftAdvance(options?: {
     restedAtBar: isResting,
     completedWorkstations,
     factionEvents,
+    anomalyMigrations,
   };
 }

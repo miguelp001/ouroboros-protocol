@@ -338,6 +338,30 @@ class SlateAudioEngine {
       this.playGlassClink();
     }, 280);
   }
+
+  // Anomaly Hum: Dissonant vibrating sub-space frequency
+  public playAnomalyHum() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.linearRampToValueAtTime(560, now + 0.15);
+    osc.frequency.linearRampToValueAtTime(520, now + 0.3);
+
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.3);
+  }
 }
 
 export const soundFx = new SlateAudioEngine();

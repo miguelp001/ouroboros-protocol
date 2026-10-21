@@ -11,7 +11,8 @@ import {
   StoryletRequirementSchema,
   StoryletBranchSchema,
   StoryletSchema,
-  GameEngineStateSchema
+  GameEngineStateSchema,
+  NodeAnomalySchema
 } from '../engine/schemas';
 
 export type AgentZeroStats = z.infer<typeof AgentStatsSchema>;
@@ -26,6 +27,7 @@ export type Shift = z.infer<typeof ShiftSchema>;
 export type StoryletRequirement = z.infer<typeof StoryletRequirementSchema>;
 export type StoryletBranch = z.infer<typeof StoryletBranchSchema>;
 export type Storylet = z.infer<typeof StoryletSchema>;
+export type NodeAnomaly = z.infer<typeof NodeAnomalySchema>;
 export type GameEngineState = z.infer<typeof GameEngineStateSchema>;
 
 export interface PbtARollResult {

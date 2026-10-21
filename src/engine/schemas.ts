@@ -114,6 +114,14 @@ export const StoryletSchema = z.object({
   branches: z.array(StoryletBranchSchema),
 });
 
+export const NodeAnomalySchema = z.object({
+  nodeId: z.string(),
+  tier: z.number().int().min(0).max(5),
+  entityName: z.string().optional(),
+  isMobile: z.boolean().optional(),
+  contained: z.boolean().optional(),
+});
+
 export const GameEngineStateSchema = z.object({
   agentZero: AgentZeroSchema,
   qualities: z.record(z.union([z.number(), z.boolean(), z.string()])),
@@ -147,4 +155,5 @@ export const GameEngineStateSchema = z.object({
     callsign: z.string(),
     locationTag: z.string(),
   }).nullable().optional(),
+  nodeAnomalies: z.record(NodeAnomalySchema).optional(),
 });

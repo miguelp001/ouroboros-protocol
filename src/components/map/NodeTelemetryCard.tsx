@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MapNode } from '../../data/transitMapData';
 import { 
   Compass, 
@@ -7,10 +7,22 @@ import {
   MapPin, 
   FastForward, 
   Key, 
-  AlertTriangle 
+  AlertTriangle,
+  ShieldCheck,
+  Sparkles,
+  Crosshair
 } from 'lucide-react';
 import { SlateButton } from '../slate/SlateButton';
 import { TravelCheckResult } from '../../engine/transitEngine';
+import { 
+  getNodeAnomaly, 
+  canContainAnomaly, 
+  deployRealityAnchor, 
+  performSpecialistPurge, 
+  harvestAnomalyResidue 
+} from '../../engine/anomalyEngine';
+import { useGameStore } from '../../engine/store';
+import { soundFx } from '../../audio/soundFx';
 
 interface NodeTelemetryCardProps {
   node: MapNode;
@@ -27,7 +39,26 @@ export const NodeTelemetryCard: React.FC<NodeTelemetryCardProps> = ({
   currentSectorHeat,
   onInitiateTravel,
 }) => {
-  const getAnomalyBadge = (tier: number) => {
+  const store = useGameStore();
+  const [containmentNotice, setContainmentNotice] = useState<string | null>(null);
+
+  const activeCompanionId = store.activeCompanionId;
+  const companion = store.roster.find((op) => op.id === activeCompanionId);
+
+  // Live Anomaly Telemetry
+  const liveAnomaly = getNodeAnomaly(node.id);
+  const containmentCheck = canContainAnomaly(node.id, activeCompanionId);
+
+  const getAnomalyBadge = (tier: number, isContained?: boolean, isMobile?: boolean) => {
+    if (isContained && tier === 0) {
+      return { label: 'CLEAN // ANCHORED REALITY', color: 'text-emerald-400 border-emerald-500/40 bg-emerald-950/20' };
+    }
+    if (isContained) {
+      return { label: `TIER ${tier} // ANCHORED STABILIZATION`, color: 'text-cyan-400 border-cyan-500/40 bg-cyan-950/20' };
+    }
+    if (isMobile) {
+      return { label: `TIER ${tier} // MOBILE STALKER PRESENT`, color: 'text-orange-400 border-orange-500/40 bg-orange-950/20 animate-pulse' };
+    }
     switch (tier) {
       case 0:
         return { label: 'CLEAN // NO RESIDUAL TEAR', color: 'text-emerald-400 border-emerald-500/40 bg-emerald-950/20' };
@@ -43,7 +74,26 @@ export const NodeTelemetryCard: React.FC<NodeTelemetryCardProps> = ({
     }
   };
 
-  const anomaly = getAnomalyBadge(node.anomalyTier);
+  const anomaly = getAnomalyBadge(liveAnomaly.tier, liveAnomaly.contained, liveAnomaly.isMobile);
+
+  const handleAnchor = () => {
+    const res = deployRealityAnchor(node.id);
+    setContainmentNotice(res.message);
+    if (!res.success) soundFx.playGlitch();
+  };
+
+  const handlePurge = () => {
+    if (!activeCompanionId) return;
+    const res = performSpecialistPurge(node.id, activeCompanionId);
+    setContainmentNotice(res.message);
+    if (!res.success) soundFx.playGlitch();
+  };
+
+  const handleHarvest = () => {
+    const res = harvestAnomalyResidue(node.id);
+    setContainmentNotice(res.message);
+    if (!res.success) soundFx.playGlitch();
+  };
 
   return (
     <div className="p-4 rounded-lg border border-noir-border bg-noir-ink/90 font-mono text-xs space-y-4 shadow-slate-bevel">
@@ -97,6 +147,60 @@ export const NodeTelemetryCard: React.FC<NodeTelemetryCardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Containment & Anomaly Field Operations */}
+      {isCurrentLocation && liveAnomaly.tier > 0 && (
+        <div className="p-3 rounded bg-purple-950/20 border border-purple-500/40 space-y-2">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="font-bold text-purple-300 uppercase flex items-center gap-1.5">
+              <ShieldAlert className="h-3 w-3 text-purple-400" />
+              FIELD ANOMALY OPERATIONS // {liveAnomaly.entityName ?? `TIER ${liveAnomaly.tier}`}
+            </span>
+            <span className="text-zinc-400">CHIP: <strong className="text-amber-400">{store.economy.chipCred}C</strong></span>
+          </div>
+
+          {containmentNotice && (
+            <div className="p-2 rounded bg-noir-ink border border-purple-500/30 text-[10px] text-purple-200">
+              {containmentNotice}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            {containmentCheck.canAnchor && (
+              <button
+                onClick={handleAnchor}
+                className="px-2.5 py-1 rounded text-[10px] font-bold border border-cyan-500/50 bg-cyan-950/40 hover:bg-cyan-600 hover:text-black text-cyan-300 flex items-center gap-1 transition-colors"
+                title="Deploy reality anchor: -30 Chip Creds, +25 Digital Creds, Tier -2."
+              >
+                <ShieldCheck className="h-3 w-3" />
+                DEPLOY REALITY ANCHOR (-30C)
+              </button>
+            )}
+
+            {containmentCheck.canPurge && (
+              <button
+                onClick={handlePurge}
+                className="px-2.5 py-1 rounded text-[10px] font-bold border border-purple-500/50 bg-purple-950/40 hover:bg-purple-600 hover:text-white text-purple-200 flex items-center gap-1 transition-colors"
+                title={`Specialist Purge with ${containmentCheck.specialistName}`}
+              >
+                <Sparkles className="h-3 w-3" />
+                PURGE ANOMALY ({companion?.callsign})
+              </button>
+            )}
+
+            {containmentCheck.canHarvest && (
+              <button
+                onClick={handleHarvest}
+                className="px-2.5 py-1 rounded text-[10px] font-bold border border-amber-500/50 bg-amber-950/40 hover:bg-amber-600 hover:text-black text-amber-300 flex items-center gap-1 transition-colors"
+                title="Harvest anomaly residue: +40 Digital Creds, +1 Sector Heat."
+              >
+                <Crosshair className="h-3 w-3" />
+                HARVEST RESIDUE (+40D)
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Travel Actions & Diagnostics */}
       <div className="pt-2 border-t border-noir-border flex flex-wrap items-center justify-between gap-3">
