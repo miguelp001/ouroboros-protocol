@@ -1,74 +1,118 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
-  Radio, 
-  Dices,
   Heart,
   Skull,
   Wrench,
   Stethoscope,
   Compass,
   AlertCircle,
-  Users
+  Users,
+  Layers,
+  ChevronRight
 } from 'lucide-react';
 import { useGameStore } from './engine/store';
 import { SlateContainer } from './components/slate/SlateContainer';
 import { SlateTabs, SlateTabId } from './components/slate/SlateTabs';
 import { SlateButton } from './components/slate/SlateButton';
 import { DiceTray } from './components/dice/DiceTray';
+import { StoryletCard } from './components/storylet/StoryletCard';
 import { soundFx } from './audio/soundFx';
-import { executePbtARoll, calculatePbtAOdds, DetailedRollResult } from './engine/pbta';
-import { AgentZeroStats } from './types';
+import { executePbtARoll, DetailedRollResult } from './engine/pbta';
+import { SINK_STORYLETS } from './data/storylets/sinkStorylets';
+import { filterActiveStoryletDeck, executeStateMutations } from './engine/qbn/evaluator';
+import { StoryletBranch } from './engine/qbn/types';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
   const [currentRoll, setCurrentRoll] = useState<DetailedRollResult | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [requestHelpOut, setRequestHelpOut] = useState(true);
+  const [selectedCardIndex, setSelectedCardIndex] = useState(0);
+  const [lastBranchNarrative, setLastBranchNarrative] = useState<string | null>(null);
 
   // Store state bindings
-  const time = useGameStore((state) => state.time);
-  const agentZero = useGameStore((state) => state.agentZero);
-  const roster = useGameStore((state) => state.roster);
-  const factions = useGameStore((state) => state.factions);
-  const activeLocation = useGameStore((state) => state.activeLocation);
-  const notchesOnBar = useGameStore((state) => state.notchesOnBar);
-  const pendingWakes = useGameStore((state) => state.pendingWakes);
+  const storeState = useGameStore();
+  const time = storeState.time;
+  const agentZero = storeState.agentZero;
+  const roster = storeState.roster;
+  const factions = storeState.factions;
+  const activeLocation = storeState.activeLocation;
+  const notchesOnBar = storeState.notchesOnBar;
+  const pendingWakes = storeState.pendingWakes;
+  const isInterrupt = storeState.isInterrupt;
 
   // Store actions
-  const advanceShift = useGameStore((state) => state.advanceShift);
-  const restAtBar = useGameStore((state) => state.restAtBar);
-  const modifyAgentZeroHp = useGameStore((state) => state.modifyAgentZeroHp);
-  const resolveWake = useGameStore((state) => state.resolveWake);
+  const advanceShift = storeState.advanceShift;
+  const restAtBar = storeState.restAtBar;
+  const resolveWake = storeState.resolveWake;
+  const triggerInterrupt = storeState.triggerInterrupt;
+  const resolveInterrupt = storeState.resolveInterrupt;
 
-  const activeCompanion = roster.find((op) => op.id === useGameStore.getState().activeCompanionId);
+  const activeCompanion = roster.find((op) => op.id === storeState.activeCompanionId);
 
-  const triggerPbtACheck = (stat: keyof AgentZeroStats) => {
-    if (isRolling) return;
-    setIsRolling(true);
-    soundFx.playDiceRoll();
+  // Dynamically compute active QBN deck for current node and world qualities
+  const activeDeck = useMemo(() => {
+    return filterActiveStoryletDeck(SINK_STORYLETS, storeState);
+  }, [storeState, SINK_STORYLETS]);
 
-    setTimeout(() => {
-      const result = executePbtARoll({
-        stat,
-        statMod: agentZero.stats[stat],
-        isFatigued: time.fatigued,
-        companion: activeCompanion,
-        requestHelpOut: requestHelpOut && !!activeCompanion,
-      });
+  const activeStorylet = activeDeck[selectedCardIndex] ?? activeDeck[0];
 
-      setCurrentRoll(result);
-      setIsRolling(false);
-
-      if (result.tier === 'MISS') {
-        setTimeout(() => soundFx.playGlitch(), 200);
-        modifyAgentZeroHp(-3);
+  const handleSelectBranch = (branch: StoryletBranch) => {
+    // 1. Direct outcome (no dice roll needed)
+    if (branch.directOutcome) {
+      soundFx.playClick();
+      setLastBranchNarrative(branch.directOutcome.narrative);
+      if (branch.directOutcome.mutations) {
+        executeStateMutations(branch.directOutcome.mutations);
       }
-    }, 450);
-  };
+      return;
+    }
 
-  const getButtonOdds = (stat: keyof AgentZeroStats) => {
-    const netMod = agentZero.stats[stat] + (time.fatigued ? -1 : 0) + (requestHelpOut && activeCompanion ? 1 : 0);
-    return calculatePbtAOdds(netMod);
+    // 2. Stat check roll
+    if (branch.statCheck && branch.outcomes) {
+      if (isRolling) return;
+      setIsRolling(true);
+      soundFx.playDiceRoll();
+      setLastBranchNarrative(null);
+
+      const stat = branch.statCheck.stat;
+
+      setTimeout(() => {
+        const result = executePbtARoll({
+          stat,
+          statMod: agentZero.stats[stat],
+          isFatigued: time.fatigued,
+          companion: activeCompanion,
+          requestHelpOut: requestHelpOut && !!activeCompanion,
+        });
+
+        setCurrentRoll(result);
+        setIsRolling(false);
+
+        let outcomeData = branch.outcomes?.cleanHit;
+        if (result.tier === 'COSTLY_ADVANCE') {
+          outcomeData = branch.outcomes?.costlyAdvance;
+        } else if (result.tier === 'MISS') {
+          outcomeData = branch.outcomes?.miss;
+          setTimeout(() => soundFx.playGlitch(), 150);
+
+          // If miss triggers an interrupt card, check interrupt ID
+          if (outcomeData?.interruptId) {
+            const interruptStorylet = SINK_STORYLETS.find((s) => s.id === outcomeData?.interruptId);
+            if (interruptStorylet) {
+              triggerInterrupt(interruptStorylet as any);
+            }
+          }
+        }
+
+        if (outcomeData) {
+          setLastBranchNarrative(outcomeData.narrative);
+          if (outcomeData.mutations) {
+            executeStateMutations(outcomeData.mutations);
+          }
+        }
+      }, 450);
+    }
   };
 
   return (
@@ -87,7 +131,7 @@ export const App: React.FC = () => {
         {activeTab === 'slate' && (
           <div className="space-y-6">
             {/* Active Sector Header */}
-            <div className="flex items-center justify-between border-b border-noir-border pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-noir-border pb-3">
               <div>
                 <div className="text-[10px] text-hazard tracking-widest uppercase font-mono">LOCATION NODE: {activeLocation}</div>
                 <h2 className="text-xl font-bold tracking-tight text-noir-chalk font-mono">
@@ -95,99 +139,111 @@ export const App: React.FC = () => {
                 </h2>
               </div>
               <div className="flex items-center gap-2">
-                <SlateButton
-                  variant="neutral"
-                  onClick={() => advanceShift(false)}
-                  className="text-xs"
-                >
-                  ADVANCE SHIFT
-                </SlateButton>
-                <span className="px-2.5 py-1 text-[11px] font-bold bg-hazard/10 border border-hazard/40 text-hazard rounded font-mono">
-                  QBN STORYLET ACTIVE
+                {isInterrupt ? (
+                  <SlateButton
+                    variant="crisis"
+                    onClick={() => resolveInterrupt()}
+                    className="text-xs"
+                  >
+                    DISMISS INTERRUPT
+                  </SlateButton>
+                ) : (
+                  <SlateButton
+                    variant="neutral"
+                    onClick={() => advanceShift(false)}
+                    className="text-xs"
+                  >
+                    ADVANCE SHIFT
+                  </SlateButton>
+                )}
+                <span className={`px-2.5 py-1 text-[11px] font-bold rounded font-mono border ${
+                  isInterrupt 
+                    ? 'border-crisis/80 bg-crisis/20 text-crisis' 
+                    : 'bg-hazard/10 border-hazard/40 text-hazard'
+                }`}>
+                  {isInterrupt ? 'CRISIS LOCK ACTIVE' : `QBN HAND (${activeDeck.length} CARDS)`}
                 </span>
               </div>
             </div>
 
-            {/* Narrative Slate Card */}
-            <article className="p-5 rounded-lg border border-noir-border bg-noir-ink/80 space-y-4 font-mono">
-              <p className="text-sm leading-relaxed text-zinc-300">
-                The iron grates of the culvert groan under black tidal water. Ahead, the shifting silhouette of a 
-                <span className="text-hazard font-semibold"> Tier 3 Hound</span> circles the rusted intake valve. 
-                Its form folds like origami before snapping back into muscle and teeth. 
-                Your cracked slate buzzes against your ribs—a biometric lock just yielded.
-              </p>
-
-              <div className="text-xs text-hazard font-medium flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-noir-border/60">
-                <div className="flex items-center gap-2">
-                  <Radio className="w-3.5 h-3.5 animate-pulse text-hazard" />
-                  <span>DEPLOYED COMPANION: <strong className="text-noir-chalk">{activeCompanion?.name ?? 'SOLO'}</strong> ({activeCompanion?.callsign ?? 'NONE'})</span>
-                </div>
-                {activeCompanion && (
-                  <label className="flex items-center gap-2 text-zinc-300 cursor-pointer hover:text-hazard transition-colors select-none">
-                    <input 
-                      type="checkbox" 
-                      checked={requestHelpOut} 
-                      onChange={(e) => setRequestHelpOut(e.target.checked)}
-                      className="accent-hazard rounded"
-                    />
-                    <span className="text-[11px] flex items-center gap-1">
-                      <Users className="w-3 h-3 text-hazard" />
-                      Request Companion Help Out (+1 on 7+)
-                    </span>
-                  </label>
-                )}
+            {/* Companion Deploy bar & Help Out toggle */}
+            <div className="p-2.5 rounded border border-noir-border bg-noir-surface/60 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="text-noir-muted">ACTIVE COMPANION:</span>
+                <strong className="text-noir-chalk">{activeCompanion?.name ?? 'SOLO'}</strong>
+                <span className="text-zinc-500">({activeCompanion?.callsign ?? 'NONE'})</span>
               </div>
-            </article>
-
-            {/* Action Branches with PbtA Resolution Buttons */}
-            <div className="space-y-3">
-              <div className="text-xs tracking-wider text-noir-muted uppercase font-bold font-mono flex items-center justify-between">
-                <span>Choose Approach (2d6 + Stat{time.fatigued ? ' - 1 Fatigue' : ''}):</span>
-                <span className="text-[11px] text-zinc-500 lowercase">click to roll</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* SCRAP Action */}
-                <button
-                  onClick={() => triggerPbtACheck('scrap')}
-                  disabled={isRolling}
-                  className="group text-left p-4 rounded border border-noir-border bg-noir-surface hover:border-hazard hover:bg-noir-elevated transition-all disabled:opacity-50"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-noir-chalk group-hover:text-hazard font-mono">
-                      [SCRAP +{agentZero.stats.scrap}] Fire heavy sidearm at its core
-                    </span>
-                    <Dices className="w-4 h-4 text-hazard opacity-70 group-hover:opacity-100" />
-                  </div>
-                  <p className="text-xs text-noir-muted mt-1 font-mono">Brute physical force. Risk: weapon recoil and alert patrols.</p>
-                  <div className="text-[10px] text-zinc-500 font-mono mt-2 flex gap-3">
-                    <span className="text-emerald-400/80">Clean: {getButtonOdds('scrap').cleanHitPct}%</span>
-                    <span className="text-hazard/80">Costly: {getButtonOdds('scrap').costlyAdvancePct}%</span>
-                    <span className="text-crisis/80">Miss: {getButtonOdds('scrap').missPct}%</span>
-                  </div>
-                </button>
-
-                {/* COVER Action */}
-                <button
-                  onClick={() => triggerPbtACheck('cover')}
-                  disabled={isRolling}
-                  className="group text-left p-4 rounded border border-noir-border bg-noir-surface hover:border-hazard hover:bg-noir-elevated transition-all disabled:opacity-50"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-noir-chalk group-hover:text-hazard font-mono">
-                      [COVER +{agentZero.stats.cover}] Drop phosphorus flare and slip into duct
-                    </span>
-                    <Dices className="w-4 h-4 text-hazard opacity-70 group-hover:opacity-100" />
-                  </div>
-                  <p className="text-xs text-noir-muted mt-1 font-mono">Stealth evasion. Risk: blinding flash disorienting companion.</p>
-                  <div className="text-[10px] text-zinc-500 font-mono mt-2 flex gap-3">
-                    <span className="text-emerald-400/80">Clean: {getButtonOdds('cover').cleanHitPct}%</span>
-                    <span className="text-hazard/80">Costly: {getButtonOdds('cover').costlyAdvancePct}%</span>
-                    <span className="text-crisis/80">Miss: {getButtonOdds('cover').missPct}%</span>
-                  </div>
-                </button>
-              </div>
+              {activeCompanion && (
+                <label className="flex items-center gap-2 text-zinc-300 cursor-pointer hover:text-hazard transition-colors select-none">
+                  <input 
+                    type="checkbox" 
+                    checked={requestHelpOut} 
+                    onChange={(e) => setRequestHelpOut(e.target.checked)}
+                    className="accent-hazard rounded"
+                  />
+                  <span className="text-[11px] flex items-center gap-1">
+                    <Users className="w-3 h-3 text-hazard" />
+                    Companion Help Out (+1 on 7+)
+                  </span>
+                </label>
+              )}
             </div>
+
+            {/* Storylet Hand Navigation (if multiple cards dealt) */}
+            {activeDeck.length > 1 && !isInterrupt && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-mono">
+                <span className="text-zinc-500 flex items-center gap-1 text-[11px]">
+                  <Layers className="w-3.5 h-3.5 text-hazard" />
+                  HAND:
+                </span>
+                {activeDeck.map((card, idx) => (
+                  <button
+                    key={card.id}
+                    onClick={() => {
+                      soundFx.playClick();
+                      setSelectedCardIndex(idx);
+                    }}
+                    className={`px-3 py-1.5 rounded border text-[11px] flex items-center gap-1.5 transition-all whitespace-nowrap ${
+                      selectedCardIndex === idx
+                        ? 'border-hazard bg-hazard/10 text-hazard font-bold'
+                        : 'border-noir-border bg-noir-surface text-noir-muted hover:text-noir-chalk'
+                    }`}
+                  >
+                    <span>0{idx + 1} // {card.title.split('//')[0]}</span>
+                    <ChevronRight className="w-3 h-3 opacity-60" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Active Storylet Card */}
+            {activeStorylet ? (
+              <StoryletCard
+                storylet={activeStorylet}
+                agentStats={agentZero.stats}
+                isFatigued={time.fatigued}
+                hasHelpOut={requestHelpOut && !!activeCompanion}
+                isRolling={isRolling}
+                onSelectBranch={handleSelectBranch}
+              />
+            ) : (
+              <div className="p-8 text-center border border-dashed border-noir-border rounded-lg text-noir-muted font-mono text-xs">
+                NO ACTIVE STORYLETS FOR CURRENT QUALITIES AT THIS NODE. ADVANCE SHIFT OR TRAVEL.
+              </div>
+            )}
+
+            {/* Resolution Narrative Excerpt */}
+            {lastBranchNarrative && (
+              <div className="p-4 rounded border border-hazard/40 bg-noir-ink/90 font-mono text-xs text-zinc-200 space-y-1 shadow-inner">
+                <div className="text-[10px] text-hazard tracking-widest uppercase font-bold">
+                  CONSEQUENCE & FIELD TELEMETRY:
+                </div>
+                <p className="leading-relaxed text-zinc-300">
+                  {lastBranchNarrative}
+                </p>
+              </div>
+            )}
 
             {/* PbtA Animated Resolution Tray */}
             {(currentRoll || isRolling) && (
@@ -368,7 +424,7 @@ export const App: React.FC = () => {
             <span className="w-1.5 h-1.5 rounded-full bg-hazard" />
             OUROBOROS KERNEL: OPERATIONAL
           </span>
-          <span>PHASE 4: PBTA 2D6 NARRATIVE RESOLUTION ENGINE ACTIVE</span>
+          <span>PHASE 5: QUALITY-BASED NARRATIVE (QBN) ENGINE ACTIVE</span>
         </footer>
       </main>
     </SlateContainer>

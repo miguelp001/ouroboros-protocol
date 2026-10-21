@@ -279,6 +279,7 @@ export const INITIAL_GAME_STATE: GameEngineState = {
     threshold_key_discovered: true,
     bartender_met: false,
     vault_zero_rumors: true,
+    s01_hound_neutralized: false,
   },
   economy: {
     digitalCred: 150,
