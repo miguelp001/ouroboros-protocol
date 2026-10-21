@@ -739,7 +739,7 @@ export const App: React.FC = () => {
             <span className={`w-1.5 h-1.5 rounded-full ${isInterrupt ? 'bg-crisis animate-ping' : 'bg-hazard'}`} />
             {isInterrupt ? 'OUROBOROS WARNING: THREAT INTERCEPT ACTIVE' : 'OUROBOROS KERNEL: OPERATIONAL'}
           </span>
-          <span>PHASE 24: POST-GAME DIRECTOR MODE & MULTI-CELL SQUADS</span>
+          <span>PHASE 25: COMPLETE GOLD MASTER // ALL 25 PHASES OPERATIONAL</span>
         </footer>
       </main>
       )}
