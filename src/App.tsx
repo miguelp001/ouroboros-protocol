@@ -7,17 +7,23 @@ import {
   Wrench,
   Stethoscope,
   Compass,
-  AlertCircle
+  AlertCircle,
+  Users
 } from 'lucide-react';
 import { useGameStore } from './engine/store';
 import { SlateContainer } from './components/slate/SlateContainer';
 import { SlateTabs, SlateTabId } from './components/slate/SlateTabs';
 import { SlateButton } from './components/slate/SlateButton';
+import { DiceTray } from './components/dice/DiceTray';
 import { soundFx } from './audio/soundFx';
+import { executePbtARoll, calculatePbtAOdds, DetailedRollResult } from './engine/pbta';
+import { AgentZeroStats } from './types';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
-  const [lastRoll, setLastRoll] = useState<{ d1: number; d2: number; total: number; outcome: string } | null>(null);
+  const [currentRoll, setCurrentRoll] = useState<DetailedRollResult | null>(null);
+  const [isRolling, setIsRolling] = useState(false);
+  const [requestHelpOut, setRequestHelpOut] = useState(true);
 
   // Store state bindings
   const time = useGameStore((state) => state.time);
@@ -34,30 +40,35 @@ export const App: React.FC = () => {
   const modifyAgentZeroHp = useGameStore((state) => state.modifyAgentZeroHp);
   const resolveWake = useGameStore((state) => state.resolveWake);
 
-  const simulatePbtARoll = (statMod: number) => {
-    // Play tactile physical dice impact sound
+  const activeCompanion = roster.find((op) => op.id === useGameStore.getState().activeCompanionId);
+
+  const triggerPbtACheck = (stat: keyof AgentZeroStats) => {
+    if (isRolling) return;
+    setIsRolling(true);
     soundFx.playDiceRoll();
 
-    const d1 = Math.floor(Math.random() * 6) + 1;
-    const d2 = Math.floor(Math.random() * 6) + 1;
-    const fatigueMod = time.fatigued ? -1 : 0;
-    const total = d1 + d2 + statMod + fatigueMod;
-    
-    let outcome = 'CRITICAL BLUNDER (Miss 6-)';
-    if (total >= 10) outcome = 'CLEAN HIT (10+)';
-    else if (total >= 7) outcome = 'COSTLY ADVANCE (7-9)';
+    setTimeout(() => {
+      const result = executePbtARoll({
+        stat,
+        statMod: agentZero.stats[stat],
+        isFatigued: time.fatigued,
+        companion: activeCompanion,
+        requestHelpOut: requestHelpOut && !!activeCompanion,
+      });
 
-    setLastRoll({ d1, d2, total, outcome });
+      setCurrentRoll(result);
+      setIsRolling(false);
 
-    if (total < 7) {
-      // Miss: consequence damage & sound
-      setTimeout(() => soundFx.playGlitch(), 400);
-      modifyAgentZeroHp(-3);
-    }
+      if (result.tier === 'MISS') {
+        setTimeout(() => soundFx.playGlitch(), 200);
+        modifyAgentZeroHp(-3);
+      }
+    }, 450);
   };
 
-  const getActiveCompanion = () => {
-    return roster.find((op) => op.id === useGameStore.getState().activeCompanionId);
+  const getButtonOdds = (stat: keyof AgentZeroStats) => {
+    const netMod = agentZero.stats[stat] + (time.fatigued ? -1 : 0) + (requestHelpOut && activeCompanion ? 1 : 0);
+    return calculatePbtAOdds(netMod);
   };
 
   return (
@@ -98,7 +109,7 @@ export const App: React.FC = () => {
             </div>
 
             {/* Narrative Slate Card */}
-            <article className="p-5 rounded-lg border border-noir-border bg-noir-ink/80 space-y-4">
+            <article className="p-5 rounded-lg border border-noir-border bg-noir-ink/80 space-y-4 font-mono">
               <p className="text-sm leading-relaxed text-zinc-300">
                 The iron grates of the culvert groan under black tidal water. Ahead, the shifting silhouette of a 
                 <span className="text-hazard font-semibold"> Tier 3 Hound</span> circles the rusted intake valve. 
@@ -106,25 +117,41 @@ export const App: React.FC = () => {
                 Your cracked slate buzzes against your ribs—a biometric lock just yielded.
               </p>
 
-              <div className="text-xs text-hazard font-medium flex items-center justify-between pt-1">
+              <div className="text-xs text-hazard font-medium flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-noir-border/60">
                 <div className="flex items-center gap-2">
                   <Radio className="w-3.5 h-3.5 animate-pulse text-hazard" />
-                  <span>DEPLOYED COMPANION: <strong className="text-noir-chalk">{getActiveCompanion()?.name ?? 'SOLO'}</strong> ({getActiveCompanion()?.callsign ?? 'NONE'})</span>
+                  <span>DEPLOYED COMPANION: <strong className="text-noir-chalk">{activeCompanion?.name ?? 'SOLO'}</strong> ({activeCompanion?.callsign ?? 'NONE'})</span>
                 </div>
-                <span className="text-noir-muted">PERK: {getActiveCompanion()?.loyaltyPerk ?? 'NONE'}</span>
+                {activeCompanion && (
+                  <label className="flex items-center gap-2 text-zinc-300 cursor-pointer hover:text-hazard transition-colors select-none">
+                    <input 
+                      type="checkbox" 
+                      checked={requestHelpOut} 
+                      onChange={(e) => setRequestHelpOut(e.target.checked)}
+                      className="accent-hazard rounded"
+                    />
+                    <span className="text-[11px] flex items-center gap-1">
+                      <Users className="w-3 h-3 text-hazard" />
+                      Request Companion Help Out (+1 on 7+)
+                    </span>
+                  </label>
+                )}
               </div>
             </article>
 
             {/* Action Branches with PbtA Resolution Buttons */}
             <div className="space-y-3">
-              <div className="text-xs tracking-wider text-noir-muted uppercase font-bold font-mono">
-                Choose Approach (2d6 + Stat{time.fatigued ? ' - 1 Fatigue' : ''}):
+              <div className="text-xs tracking-wider text-noir-muted uppercase font-bold font-mono flex items-center justify-between">
+                <span>Choose Approach (2d6 + Stat{time.fatigued ? ' - 1 Fatigue' : ''}):</span>
+                <span className="text-[11px] text-zinc-500 lowercase">click to roll</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* SCRAP Action */}
                 <button
-                  onClick={() => simulatePbtARoll(agentZero.stats.scrap)}
-                  className="group text-left p-4 rounded border border-noir-border bg-noir-surface hover:border-hazard hover:bg-noir-elevated transition-all"
+                  onClick={() => triggerPbtACheck('scrap')}
+                  disabled={isRolling}
+                  className="group text-left p-4 rounded border border-noir-border bg-noir-surface hover:border-hazard hover:bg-noir-elevated transition-all disabled:opacity-50"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-sm text-noir-chalk group-hover:text-hazard font-mono">
@@ -133,11 +160,18 @@ export const App: React.FC = () => {
                     <Dices className="w-4 h-4 text-hazard opacity-70 group-hover:opacity-100" />
                   </div>
                   <p className="text-xs text-noir-muted mt-1 font-mono">Brute physical force. Risk: weapon recoil and alert patrols.</p>
+                  <div className="text-[10px] text-zinc-500 font-mono mt-2 flex gap-3">
+                    <span className="text-emerald-400/80">Clean: {getButtonOdds('scrap').cleanHitPct}%</span>
+                    <span className="text-hazard/80">Costly: {getButtonOdds('scrap').costlyAdvancePct}%</span>
+                    <span className="text-crisis/80">Miss: {getButtonOdds('scrap').missPct}%</span>
+                  </div>
                 </button>
 
+                {/* COVER Action */}
                 <button
-                  onClick={() => simulatePbtARoll(agentZero.stats.cover)}
-                  className="group text-left p-4 rounded border border-noir-border bg-noir-surface hover:border-hazard hover:bg-noir-elevated transition-all"
+                  onClick={() => triggerPbtACheck('cover')}
+                  disabled={isRolling}
+                  className="group text-left p-4 rounded border border-noir-border bg-noir-surface hover:border-hazard hover:bg-noir-elevated transition-all disabled:opacity-50"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-sm text-noir-chalk group-hover:text-hazard font-mono">
@@ -146,31 +180,21 @@ export const App: React.FC = () => {
                     <Dices className="w-4 h-4 text-hazard opacity-70 group-hover:opacity-100" />
                   </div>
                   <p className="text-xs text-noir-muted mt-1 font-mono">Stealth evasion. Risk: blinding flash disorienting companion.</p>
+                  <div className="text-[10px] text-zinc-500 font-mono mt-2 flex gap-3">
+                    <span className="text-emerald-400/80">Clean: {getButtonOdds('cover').cleanHitPct}%</span>
+                    <span className="text-hazard/80">Costly: {getButtonOdds('cover').costlyAdvancePct}%</span>
+                    <span className="text-crisis/80">Miss: {getButtonOdds('cover').missPct}%</span>
+                  </div>
                 </button>
               </div>
             </div>
 
-            {/* Last Roll Telemetry Result */}
-            {lastRoll && (
-              <div className={`p-4 rounded border ${
-                lastRoll.total >= 10 
-                  ? 'border-emerald-500/50 bg-emerald-950/20 text-emerald-300'
-                  : lastRoll.total >= 7
-                  ? 'border-hazard/50 bg-hazard/10 text-hazard'
-                  : 'border-crisis bg-crisis/10 text-crisis'
-              } text-xs font-mono space-y-1`}>
-                <div className="font-bold flex items-center justify-between">
-                  <span>ROLL: [{lastRoll.d1}] + [{lastRoll.d2}] = {lastRoll.total}</span>
-                  <span className="tracking-widest uppercase">{lastRoll.outcome}</span>
-                </div>
-                <div className="text-[11px] opacity-80">
-                  {lastRoll.total >= 10 
-                    ? '>> Clean Hit: Target neutralized without consequence.'
-                    : lastRoll.total >= 7 
-                    ? '>> Costly Advance: Success achieved, but district Heat escalates.' 
-                    : '>> Miss: Consequence intercept triggered! -3 HP suffered.'}
-                </div>
-              </div>
+            {/* PbtA Animated Resolution Tray */}
+            {(currentRoll || isRolling) && (
+              <DiceTray 
+                rollResult={currentRoll} 
+                isRolling={isRolling} 
+              />
             )}
           </div>
         )}
@@ -344,7 +368,7 @@ export const App: React.FC = () => {
             <span className="w-1.5 h-1.5 rounded-full bg-hazard" />
             OUROBOROS KERNEL: OPERATIONAL
           </span>
-          <span>PHASE 3: DIEGETIC SLATE UI & NOIR AUDIO-VISUAL ACTIVE</span>
+          <span>PHASE 4: PBTA 2D6 NARRATIVE RESOLUTION ENGINE ACTIVE</span>
         </footer>
       </main>
     </SlateContainer>

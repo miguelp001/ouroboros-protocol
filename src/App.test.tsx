@@ -18,8 +18,8 @@ describe('Diegetic Slate App Scaffolding', () => {
 
   it('simulates a PbtA 2d6 action check', () => {
     render(<App />);
-    const scrapButton = screen.getByRole('button', { name: /\[SCRAP \+2\]/i });
+    const scrapButton = screen.getByRole('button', { name: /\[SCRAP \+/i });
     fireEvent.click(scrapButton);
-    expect(screen.getByText(/ROLL:/i)).toBeInTheDocument();
+    expect(screen.getByText(/PBTA RESOLUTION TRAY/i)).toBeInTheDocument();
   });
 });
