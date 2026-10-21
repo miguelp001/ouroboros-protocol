@@ -7,6 +7,7 @@ import './style/main.css';
 import { setupScript } from './script.js';
 import { renderTransitMap } from './engine/vanillaMap.js';
 import { renderRoster } from './engine/vanillaRoster.js';
+import { initQBNStorage } from './engine/vanillaQBN.js';
 
 // Access browser-native Monogatari singleton (loaded via /engine/core/monogatari.js)
 const Monogatari = window.Monogatari;
@@ -142,7 +143,7 @@ monogatari.characters({
 });
 
 // Initial Storage State
-monogatari.storage({
+const initialStorage = {
   playerHp: 10,
   playerMaxHp: 10,
   heat: 0,
@@ -159,7 +160,9 @@ monogatari.storage({
   lastRoll: null,
   slateText: '',
   missingKeys: '',
-});
+};
+initQBNStorage(initialStorage);
+monogatari.storage(initialStorage);
 
 // Setup narrative script
 setupScript(monogatari);
@@ -193,8 +196,13 @@ function initHudListeners() {
         renderTransitMap(transitContainer, {
           currentNodeId: s.currentNodeId,
           onStationSelect: (station) => {
-            if (station.scriptLabel) {
-              monogatari.run(`jump ${station.scriptLabel}`);
+            s.activeLocation = station.id;
+            s.activeSector = station.sector;
+            s.currentNodeId = station.id;
+            if (station.id === 'X-03') {
+              monogatari.run('jump Station_Scorch_Terminus');
+            } else {
+              monogatari.run('jump Station_QBN_Encounter');
             }
           },
         });

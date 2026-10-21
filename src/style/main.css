@@ -617,3 +617,23 @@ centered-dialog [data-content="wrapper"] {
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid #ef4444;
 }
+
+/* ================= STORYLET CARD & SCROLLBAR STYLING ================= */
+.storylet-card {
+  overflow-y: auto;
+  max-height: 82vh;
+  scrollbar-width: thin;
+  scrollbar-color: #f59e0b #18181b;
+}
+
+.storylet-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.storylet-card::-webkit-scrollbar-track {
+  background: #18181b;
+}
+
+.storylet-card::-webkit-scrollbar-thumb {
+  background: #f59e0b;
+}
