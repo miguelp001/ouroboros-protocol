@@ -21,6 +21,7 @@ export const REDOUBT_STORYLETS: Storylet[] = [
         id: 'branch_skeleton_key_gate_bypass',
         label: 'Insert Master Skeleton Key into secondary manual bypass',
         description: 'Instant silent bypass if you possess the Skeleton Key.',
+        requiresKey: 'SKELETON_KEY',
         directOutcome: {
           narrative: 'The adaptive fluid tumblers align with a heavy, satisfying metallic clack. The hydraulic gate raises just six inches—enough for you to slide underneath completely unseen.',
           mutations: {
@@ -282,6 +283,9 @@ export const REDOUBT_STORYLETS: Storylet[] = [
     narrative: `The deepest bunker beneath the Redoubt. Sealed under four layers of blast lead lies Commander Vane’s command console. On screen: orbital survey maps of Terminus Zero and seismic data regarding the subterranean portal to Vault Zero.`,
     requirements: {
       nodeId: 'R-03',
+      qualities: {
+        r03_vault_intel_downloaded: false,
+      },
     },
     branches: [
       {

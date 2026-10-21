@@ -246,6 +246,19 @@ function renderEncounterCard(container, card, activeCompanion, storage, monogata
     const statMod = stat && storage.agentZero?.stats ? (storage.agentZero.stats[b.statCheck.stat] || 0) : 0;
     const fatigued = Boolean(storage.time?.fatigued);
 
+    // Prerequisite checks
+    const hasRequiredKey = !b.requiresKey || 
+      (storage.agencyKeys && storage.agencyKeys.includes(b.requiresKey)) ||
+      (b.requiresKey === 'GHOST_KEY' && storage.keys?.apex) ||
+      (b.requiresKey === 'SKELETON_KEY' && storage.keys?.redoubt) ||
+      (b.requiresKey === 'THRESHOLD_KEY' && storage.keys?.sluice);
+
+    const chipNeeded = b.requiresCred?.chipCred || (b.id?.includes('tithe') || b.id?.includes('bribe') || b.id?.includes('buy') ? 25 : 0);
+    const hasEnoughCred = !chipNeeded || ((storage.economy?.chipCred ?? storage.chipCred ?? 100) >= chipNeeded);
+
+    const isLocked = !hasRequiredKey || !hasEnoughCred;
+    const lockReason = !hasRequiredKey ? `REQUIRES ${b.requiresKey}` : `REQUIRES ${chipNeeded} CHIP CRED`;
+
     return `
       <div class="border border-zinc-800 bg-zinc-900/90 p-3 mb-2.5 hover:border-amber-500 transition-colors">
         <div class="flex items-center justify-between mb-1">
@@ -259,9 +272,15 @@ function renderEncounterCard(container, card, activeCompanion, storage, monogata
           ` : '<span class="text-xs font-mono text-zinc-500">[NARRATIVE ADVANCE]</span>'}
         </div>
         <p class="text-xs font-mono text-zinc-400 mb-3 leading-relaxed">${b.description}</p>
-        <button class="action-brush-primary text-xs py-2 px-4 font-mono font-bold w-full text-center" data-branch-idx="${idx}">
-          (( EXECUTE APPROACH ))
-        </button>
+        ${isLocked ? `
+          <button disabled class="opacity-50 cursor-not-allowed bg-zinc-800 border border-zinc-700 text-zinc-400 text-xs py-2 px-4 font-mono w-full text-center">
+            [LOCKED // ${lockReason}]
+          </button>
+        ` : `
+          <button class="action-brush-primary text-xs py-2 px-4 font-mono font-bold w-full text-center" data-branch-idx="${idx}">
+            (( EXECUTE APPROACH ))
+          </button>
+        `}
       </div>
     `;
   }).join('');

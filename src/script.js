@@ -264,11 +264,9 @@ export function setupScript(monogatari) {
       'You stand in a dimly lit 1860s taproom sanctuary. A pendulum grandfather clock ticks rhythmically against the scarred mahogany bar.',
       'Behind the counter, an impeccably dressed man wipes a crystal tumbler with a linen cloth.',
       'b:default "Evenin\', Agent 0. You made it out of the culvert in one piece. Not every operative manages that on their first turn of the wheel."',
-      'Around the low circular tables sit familiar faces—your vanguard team, waiting in the sanctuary’s unshifted pocket of reality.',
-      's:default "Good to see you on two feet, 0. We thought the Covenant dredged you up in Line B."',
-      'c:default "I told you Silas. The Cipher always knows how to find the latch."',
-      'v:default "Neurological scan displays stable cerebral wave output. The transponder in the terminal is synchronized."',
-      'b:default "Rest your bones, friend. The metropolis outside is running hot, but here, the clocks answer to no syndicate."',
+      'At the corner table sits Silas Vance, wiping silt and brackish water from his kinetic shotgun.',
+      's:default "Good to see you on two feet, 0. When that Shifting Hound lunged, I thought for sure the Covenant would be dredging us out of Line B."',
+      'b:default "Rest your bones, friends. The metropolis outside is running hot, but here, the clocks answer to no syndicate."',
       () => {
         const topHud = document.getElementById('top-hud-bar');
         if (topHud) topHud.classList.remove('hud-locked');
@@ -503,6 +501,11 @@ export function setupScript(monogatari) {
               const s = monogatari.storage();
               s.activeCompanionId = 'silas_vance';
               monogatari.run('jump Companion_Selected');
+            },
+            'Condition': () => {
+              const s = monogatari.storage();
+              const op = s.roster?.find((o) => o.id === 'silas_vance');
+              return op && op.status === 'ACTIVE';
             }
           },
           'PickCora': {
@@ -511,6 +514,11 @@ export function setupScript(monogatari) {
               const s = monogatari.storage();
               s.activeCompanionId = 'cora_ramos';
               monogatari.run('jump Companion_Selected');
+            },
+            'Condition': () => {
+              const s = monogatari.storage();
+              const op = s.roster?.find((o) => o.id === 'cora_ramos');
+              return op && op.status === 'ACTIVE';
             }
           },
           'PickVoss': {
@@ -519,14 +527,37 @@ export function setupScript(monogatari) {
               const s = monogatari.storage();
               s.activeCompanionId = 'dr_aris_voss';
               monogatari.run('jump Companion_Selected');
+            },
+            'Condition': () => {
+              const s = monogatari.storage();
+              const op = s.roster?.find((o) => o.id === 'dr_aris_voss');
+              return op && op.status === 'ACTIVE';
             }
           },
-          'PickTinker': {
-            'Text': '(( JAX "TINKER" // ANVIL )) Master Weaponsmith [RECKON +2, SCRAP +1] - Doubles mechanical salvage.',
+          'PickNail': {
+            'Text': '(( "NAIL" REYES // RIVET )) Tunnel Scrapper [SCRAP +2, COVER +1] - Bypasses bulkheads silently.',
             'Do': () => {
               const s = monogatari.storage();
-              s.activeCompanionId = 'jax_tinker';
+              s.activeCompanionId = 'nail_reyes';
               monogatari.run('jump Companion_Selected');
+            },
+            'Condition': () => {
+              const s = monogatari.storage();
+              const op = s.roster?.find((o) => o.id === 'nail_reyes');
+              return op && op.status === 'ACTIVE';
+            }
+          },
+          'PickBrick': {
+            'Text': '(( "BRICK" // BASTION )) Augmented Juggernaut [SCRAP +2, TETHER +1] - Absorbs 2 damage for Agent 0.',
+            'Do': () => {
+              const s = monogatari.storage();
+              s.activeCompanionId = 'brick';
+              monogatari.run('jump Companion_Selected');
+            },
+            'Condition': () => {
+              const s = monogatari.storage();
+              const op = s.roster?.find((o) => o.id === 'brick');
+              return op && op.status === 'ACTIVE';
             }
           },
           'ReturnHub': {

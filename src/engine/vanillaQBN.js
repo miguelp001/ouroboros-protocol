@@ -100,9 +100,12 @@ export function initQBNStorage(storage) {
     storage.notches = 0;
     storage.agencyKeys = [];
 
-    // Initialize operatives
+    // Initialize operatives: Silas Vance is sole starting companion
+    storage.recruited = ['silas_vance'];
     storage.roster = CANONICAL_OPERATIVES.map((op) => ({
       ...op,
+      status: op.id === 'silas_vance' ? 'ACTIVE' : 'UNRECRUITED',
+      recruitmentStatus: op.id === 'silas_vance' ? 'STARTING' : 'RECRUITABLE',
       stats: { ...op.stats },
       epitaphLedger: [...op.epitaphLedger],
     }));
@@ -269,7 +272,10 @@ export function applyStateMutations(mutations, storage, monogatari) {
       storage.recruited.push(opId);
     }
     const rOp = storage.roster.find((o) => o.id === opId);
-    if (rOp) rOp.recruitmentStatus = 'RECRUITED';
+    if (rOp) {
+      rOp.status = 'ACTIVE';
+      rOp.recruitmentStatus = 'RECRUITED';
+    }
   }
 
   // 7. Advance Shift (if requested)

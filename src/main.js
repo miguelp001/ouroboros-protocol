@@ -156,7 +156,7 @@ const initialStorage = {
     apex: false,
     redoubt: false,
   },
-  recruited: ['silas_vance', 'cora_ramos', 'dr_aris_voss', 'jax_tinker'],
+  recruited: ['silas_vance'],
   lastRoll: null,
   slateText: '',
   missingKeys: '',

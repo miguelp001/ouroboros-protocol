@@ -59,6 +59,9 @@ export const SCORCH_STORYLETS: Storylet[] = [
     narrative: `Tumbled into a radioactive crater lies an armored train car. Inside, a sealed containment rack holds pre-collapse thorium isotope batteries—invaluable power sources for high-tier safehouse workstations.`,
     requirements: {
       nodeId: 'X-01',
+      qualities: {
+        x01_thorium_salvaged: false,
+      },
     },
     branches: [
       {
@@ -71,6 +74,7 @@ export const SCORCH_STORYLETS: Storylet[] = [
             narrative: 'You lift the heavy lead container without breaking the seals. The thorium cells will yield 50 Chip Creds and 40 Digital Creds.',
             mutations: {
               modifyCred: { chipCred: 50, digitalCred: 40 },
+              setQualities: { x01_thorium_salvaged: true },
             },
           },
           costlyAdvance: {
@@ -78,6 +82,7 @@ export const SCORCH_STORYLETS: Storylet[] = [
             mutations: {
               modifyCred: { chipCred: 30 },
               modifyAgentHp: -1,
+              setQualities: { x01_thorium_salvaged: true },
             },
           },
           miss: {
@@ -223,6 +228,9 @@ export const SCORCH_STORYLETS: Storylet[] = [
     narrative: `A jagged abyssal fissure cuts through the granite ceiling above Terminus Zero. Geometry spills outward like spilled ink. If left unanchored, the tear will propagate dimensional contagion across the entire subway network.`,
     requirements: {
       nodeId: 'X-03',
+      qualities: {
+        x03_tear_contained: false,
+      },
     },
     branches: [
       {

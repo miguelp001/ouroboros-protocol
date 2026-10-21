@@ -130,4 +130,77 @@ describe('Master Narrative Storylet Content (Phase 21)', () => {
     expect(state.economy.chipCred).toBe(INITIAL_GAME_STATE.economy.chipCred + 50);
     expect(state.economy.digitalCred).toBe(INITIAL_GAME_STATE.economy.digitalCred + 40);
   });
+
+  it('evaluates storylets for logic and internal consistency', () => {
+    const allStorylets = [...ALL_STORYLETS];
+    const storyletIds = new Set<string>();
+    const grantedKeys = new Set<string>(['THRESHOLD_KEY', 'SLUICE_KEY', 'APEX_KEY', 'REDOUBT_KEY']);
+    const requiredKeys = new Set<string>();
+    const setQualities = new Set<string>([
+      'prologue_completed',
+      'intro_culvert_survived',
+      'threshold_key_discovered',
+      'bartender_met',
+      'vault_zero_rumors',
+      's01_hound_neutralized',
+    ]);
+    const checkedQualities = new Set<string>();
+
+    allStorylets.forEach((storylet) => {
+      // 1. Unique IDs
+      expect(storyletIds.has(storylet.id), `Duplicate storylet ID found: ${storylet.id}`).toBe(false);
+      storyletIds.add(storylet.id);
+
+      // 2. Sector matching Node prefix
+      if (storylet.nodeId) {
+        const prefix = storylet.nodeId.split('-')[0];
+        const expectedSector = { S: 'sink', H: 'heights', C: 'heights', OT: 'old_town', R: 'redoubt', X: 'scorch' }[prefix];
+        expect(storylet.sector, `Storylet ${storylet.id} sector ${storylet.sector} does not match node ${storylet.nodeId}`).toBe(expectedSector);
+      }
+
+      // 3. Requirements checks
+      if (storylet.requirements.hasKey) {
+        requiredKeys.add(storylet.requirements.hasKey);
+      }
+      if (storylet.requirements.qualities) {
+        Object.keys(storylet.requirements.qualities).forEach((k) => checkedQualities.add(k));
+      }
+
+      // 4. Branch IDs unique within storylet
+      const branchIds = new Set<string>();
+      storylet.branches.forEach((branch) => {
+        expect(branchIds.has(branch.id), `Duplicate branch ID in storylet ${storylet.id}: ${branch.id}`).toBe(false);
+        branchIds.add(branch.id);
+
+        const checkMutations = (mutations?: any) => {
+          if (!mutations) return;
+          if (mutations.addKeys) {
+            mutations.addKeys.forEach((k: string) => grantedKeys.add(k));
+          }
+          if (mutations.setQualities) {
+            Object.keys(mutations.setQualities).forEach((k: string) => setQualities.add(k));
+          }
+        };
+
+        if (branch.directOutcome) {
+          checkMutations(branch.directOutcome.mutations);
+        }
+        if (branch.outcomes) {
+          checkMutations(branch.outcomes.cleanHit?.mutations);
+          checkMutations(branch.outcomes.costlyAdvance?.mutations);
+          checkMutations(branch.outcomes.miss?.mutations);
+        }
+      });
+    });
+
+    // Check that every required key can actually be acquired
+    requiredKeys.forEach((k) => {
+      expect(grantedKeys.has(k), `Key required by storylets but never granted: ${k}`).toBe(true);
+    });
+
+    // Check that every quality checked by a storylet can actually be set or starts in initial state
+    checkedQualities.forEach((q) => {
+      expect(setQualities.has(q), `Quality checked by storylets but never set anywhere: ${q}`).toBe(true);
+    });
+  });
 });

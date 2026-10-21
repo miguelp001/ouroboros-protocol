@@ -21,6 +21,7 @@ export const HEIGHTS_STORYLETS: Storylet[] = [
         id: 'branch_ghost_key_bypass',
         label: 'Interface Quantum Ghost Key with biometric terminal',
         description: 'Instant cryptographic bypass if you possess the Ghost Key.',
+        requiresKey: 'GHOST_KEY',
         directOutcome: {
           narrative: 'The Ghost Key’s superconducting qubits inject a ghosted clearance token into the scanner. The pulse-turrets power down, and the glass turnstile opens with an executive chime.',
           mutations: {
@@ -241,6 +242,9 @@ export const HEIGHTS_STORYLETS: Storylet[] = [
     narrative: `At H-03, the train platform is trapped in a Tier 2 temporal anomaly. A ghost train roars past every 40 seconds, vanishing into thin air before resetting at the tunnel mouth. Wristwatches run backward. A flickering temporal residue core hovers above the third rail.`,
     requirements: {
       nodeId: 'H-03',
+      qualities: {
+        h03_loop_harvested: false,
+      },
     },
     branches: [
       {

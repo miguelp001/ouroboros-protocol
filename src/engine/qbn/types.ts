@@ -38,6 +38,8 @@ export interface StoryletBranch {
   id: string;
   label: string;
   description: string;
+  requiresKey?: string;
+  requiresCred?: { chipCred?: number; digitalCred?: number };
   statCheck?: {
     stat: keyof AgentZeroStats;
   };

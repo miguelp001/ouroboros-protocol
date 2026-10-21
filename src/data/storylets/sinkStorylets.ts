@@ -326,6 +326,9 @@ export const SINK_STORYLETS: Storylet[] = [
     narrative: `Beneath the rusted storage tanks of the coastal refinery lies a submerged stone archway glowing with bioluminescent anomaly algae. The air hums with psychic resonance—the water surface does not ripple even when struck.`,
     requirements: {
       nodeId: 'S-03',
+      qualities: {
+        s03_altar_purified: false,
+      },
     },
     branches: [
       {
