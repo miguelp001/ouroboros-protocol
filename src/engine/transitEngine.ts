@@ -4,6 +4,7 @@ import { MAP_NODES, TRANSIT_LINES } from '../data/transitMapData';
 import { useGameStore } from './store';
 import { executeShiftAdvance } from './shifts';
 import { soundFx } from '../audio/soundFx';
+import { canBypassCheckpoint } from './keysEngine';
 
 export interface TravelCheckResult {
   canTravel: boolean;
@@ -109,8 +110,11 @@ export function travelToDestination(toNodeId: string): { success: boolean; messa
   soundFx.playClick();
 
   const destNode = MAP_NODES[toNodeId];
+  const bypass = canBypassCheckpoint(toNodeId, keys);
+  const bypassNote = bypass.canBypass ? ` ${bypass.message}` : '';
+
   return { 
     success: true, 
-    message: `Arrived at ${destNode?.name ?? toNodeId} [${toNodeId}]. Consumed ${check.shiftCost} Shift.` 
+    message: `Arrived at ${destNode?.name ?? toNodeId} [${toNodeId}]. Consumed ${check.shiftCost} Shift.${bypassNote}` 
   };
 }

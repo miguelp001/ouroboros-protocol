@@ -34,12 +34,13 @@ import { GameOverModal } from './components/modals/GameOverModal';
 import { CatastrophicExtractionModal } from './components/modals/CatastrophicExtractionModal';
 import { WakeTollgateModal } from './components/modals/WakeTollgateModal';
 import { ThresholdBarView } from './components/bar/ThresholdBarView';
+import { ThreeKeysDossier } from './components/keys/ThreeKeysDossier';
 import { MAP_NODES, MapNode } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
-  const [barSubView, setBarSubView] = useState<'taproom' | 'safehouse'>('taproom');
+  const [barSubView, setBarSubView] = useState<'taproom' | 'safehouse' | 'keys'>('taproom');
   const [mapSubView, setMapSubView] = useState<'vignelli' | 'hostility' | 'fronts' | 'anomalies'>('vignelli');
   const [currentRoll, setCurrentRoll] = useState<DetailedRollResult | null>(null);
   const [isRolling, setIsRolling] = useState(false);
@@ -550,6 +551,19 @@ export const App: React.FC = () => {
                   >
                     WORKSTATION DISPATCH
                   </button>
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setBarSubView('keys');
+                    }}
+                    className={`px-3 py-1 rounded transition-colors ${
+                      barSubView === 'keys' 
+                        ? 'bg-hazard text-noir-ink font-bold' 
+                        : 'text-noir-muted hover:text-noir-chalk'
+                    }`}
+                  >
+                    THREE KEYS ({storeState.agency.keys.length}/3)
+                  </button>
                 </div>
 
                 <SlateButton
@@ -571,6 +585,14 @@ export const App: React.FC = () => {
                 activeCompanionId={storeState.activeCompanionId}
                 chipCred={storeState.economy.chipCred}
                 digitalCred={storeState.economy.digitalCred}
+              />
+            ) : barSubView === 'keys' ? (
+              <ThreeKeysDossier
+                onDeployToTerminus={() => {
+                  setActiveTab('map');
+                  setMapSubView('vignelli');
+                  setSelectedMapNode(MAP_NODES['X-03'] ?? selectedMapNode);
+                }}
               />
             ) : (
               <div className="space-y-6">
@@ -628,7 +650,7 @@ export const App: React.FC = () => {
             <span className={`w-1.5 h-1.5 rounded-full ${isInterrupt ? 'bg-crisis animate-ping' : 'bg-hazard'}`} />
             {isInterrupt ? 'OUROBOROS WARNING: THREAT INTERCEPT ACTIVE' : 'OUROBOROS KERNEL: OPERATIONAL'}
           </span>
-          <span>PHASE 14: PERMADEATH & CATASTROPHIC EXTRACTION PROTOCOL ACTIVE</span>
+          <span>PHASE 18: THE THREE KEYS PROGRESSION SYSTEM ACTIVE</span>
         </footer>
       </main>
 

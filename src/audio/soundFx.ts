@@ -362,6 +362,48 @@ class SlateAudioEngine {
     osc.start(now);
     osc.stop(now + 0.3);
   }
+
+  // Key Unlock Chime: Heavy metallic tumbler rotation followed by harmonic chime
+  public playKeyUnlock() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    
+    // Mechanical tumbler click
+    const clickOsc = ctx.createOscillator();
+    const clickGain = ctx.createGain();
+    clickOsc.type = 'triangle';
+    clickOsc.frequency.setValueAtTime(620, now);
+    clickOsc.frequency.exponentialRampToValueAtTime(140, now + 0.06);
+
+    clickGain.gain.setValueAtTime(0.2, now);
+    clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+    clickOsc.connect(clickGain);
+    clickGain.connect(ctx.destination);
+    clickOsc.start(now);
+    clickOsc.stop(now + 0.06);
+
+    // Harmonic chime (fundamental + fifth)
+    [880, 1320].forEach((freq) => {
+      const chimeOsc = ctx.createOscillator();
+      const chimeGain = ctx.createGain();
+
+      chimeOsc.type = 'sine';
+      chimeOsc.frequency.setValueAtTime(freq, now + 0.07);
+      chimeOsc.frequency.exponentialRampToValueAtTime(freq * 0.98, now + 0.6);
+
+      chimeGain.gain.setValueAtTime(0.15, now + 0.07);
+      chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+      chimeOsc.connect(chimeGain);
+      chimeGain.connect(ctx.destination);
+
+      chimeOsc.start(now + 0.07);
+      chimeOsc.stop(now + 0.6);
+    });
+  }
 }
 
 export const soundFx = new SlateAudioEngine();
