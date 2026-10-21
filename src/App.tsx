@@ -36,6 +36,7 @@ import { CatastrophicExtractionModal } from './components/modals/CatastrophicExt
 import { WakeTollgateModal } from './components/modals/WakeTollgateModal';
 import { ThresholdBarView } from './components/bar/ThresholdBarView';
 import { ThreeKeysDossier } from './components/keys/ThreeKeysDossier';
+import { PrologueView } from './components/prologue/PrologueView';
 import { MAP_NODES, MapNode } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
 
@@ -50,6 +51,7 @@ export const App: React.FC = () => {
   const [lastBranchNarrative, setLastBranchNarrative] = useState<string | null>(null);
   const [companionBanter, setCompanionBanter] = useState<BanterLine | null>(null);
   const [activePerkTrigger, setActivePerkTrigger] = useState<string | null>(null);
+  const [showPrologue, setShowPrologue] = useState(false);
 
   // Store state bindings
   const storeState = useGameStore();
@@ -208,34 +210,50 @@ export const App: React.FC = () => {
       />
 
       {/* Main Slate Workspace Viewport */}
-      <main className="flex-1 p-5 md:p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
-        {activeTab === 'slate' && (
-          <div className="space-y-6">
-            {/* Active Sector Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-noir-border pb-3">
-              <div>
-                <div className="text-[10px] text-hazard tracking-widest uppercase font-mono">LOCATION NODE: {activeLocation}</div>
-                <h2 className="text-xl font-bold tracking-tight text-noir-chalk font-mono">
-                  {isInterrupt ? 'EMERGENCY PERIMETER LOCKDOWN' : 'THE SUBMERGED SPUR // PONTOON JUNCTION'}
-                </h2>
+      {showPrologue ? (
+        <main className="flex-1 overflow-hidden flex flex-col">
+          <PrologueView onComplete={() => setShowPrologue(false)} />
+        </main>
+      ) : (
+        <main className="flex-1 p-5 md:p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
+          {activeTab === 'slate' && (
+            <div className="space-y-6">
+              {/* Active Sector Header */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-noir-border pb-3">
+                <div>
+                  <div className="text-[10px] text-hazard tracking-widest uppercase font-mono">LOCATION NODE: {activeLocation}</div>
+                  <h2 className="text-xl font-bold tracking-tight text-noir-chalk font-mono">
+                    {isInterrupt ? 'EMERGENCY PERIMETER LOCKDOWN' : 'THE SUBMERGED SPUR // PONTOON JUNCTION'}
+                  </h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setShowPrologue(true);
+                    }}
+                    className="px-2.5 py-1 text-[10px] font-bold rounded font-mono border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-hazard hover:border-hazard transition-colors"
+                    title="Launch or replay the 5-beat scripted Origin Prologue"
+                  >
+                    PROLOGUE // ORIGIN
+                  </button>
+
+                  <span className={`px-2.5 py-1 text-[11px] font-bold rounded font-mono border flex items-center gap-1.5 ${
+                    isInterrupt 
+                      ? 'border-crisis bg-crisis/20 text-crisis animate-pulse' 
+                      : 'bg-hazard/10 border-hazard/40 text-hazard'
+                  }`}>
+                    {isInterrupt ? (
+                      <>
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        CRITICAL INTERRUPT LOCK
+                      </>
+                    ) : (
+                      `QBN HAND (${activeDeck.length} CARDS)`
+                    )}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`px-2.5 py-1 text-[11px] font-bold rounded font-mono border flex items-center gap-1.5 ${
-                  isInterrupt 
-                    ? 'border-crisis bg-crisis/20 text-crisis animate-pulse' 
-                    : 'bg-hazard/10 border-hazard/40 text-hazard'
-                }`}>
-                  {isInterrupt ? (
-                    <>
-                      <ShieldAlert className="w-3.5 h-3.5" />
-                      CRITICAL INTERRUPT LOCK
-                    </>
-                  ) : (
-                    `QBN HAND (${activeDeck.length} CARDS)`
-                  )}
-                </span>
-              </div>
-            </div>
 
             {/* Action Economy Shift Dial (Dawn / Dusk / Night) */}
             <ShiftDial
@@ -665,9 +683,10 @@ export const App: React.FC = () => {
             <span className={`w-1.5 h-1.5 rounded-full ${isInterrupt ? 'bg-crisis animate-ping' : 'bg-hazard'}`} />
             {isInterrupt ? 'OUROBOROS WARNING: THREAT INTERCEPT ACTIVE' : 'OUROBOROS KERNEL: OPERATIONAL'}
           </span>
-          <span>PHASE 18: THE THREE KEYS PROGRESSION SYSTEM ACTIVE</span>
+          <span>PHASE 20: THE PROLOGUE SCRIPT & SINK ONBOARDING ACTIVE</span>
         </footer>
       </main>
+      )}
 
       {/* Catastrophic Extraction Protocol Modal */}
       {storeState.lastExtractionNotice && (

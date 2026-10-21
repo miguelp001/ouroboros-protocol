@@ -283,8 +283,8 @@ class DiegeticAmbientAudioEngine {
     };
 
     triggerFoghorn();
-    const foghornTimer = window.setInterval(triggerFoghorn, 9500);
-    timers.push(foghornTimer);
+    const foghornTimer = setInterval(triggerFoghorn, 9500);
+    timers.push(foghornTimer as unknown as number);
 
     return () => {
       timers.forEach((t) => clearInterval(t));
@@ -442,8 +442,8 @@ class DiegeticAmbientAudioEngine {
     };
 
     playScrapClang();
-    const clangTimer = window.setInterval(playScrapClang, 2800);
-    timers.push(clangTimer);
+    const clangTimer = setInterval(playScrapClang, 2800);
+    timers.push(clangTimer as unknown as number);
 
     // Layer C: Steam Pipe Hiss Venting
     const playSteamHiss = () => {
@@ -471,8 +471,8 @@ class DiegeticAmbientAudioEngine {
       steamSource.stop(now + 0.6);
     };
 
-    const steamTimer = window.setInterval(playSteamHiss, 5200);
-    timers.push(steamTimer);
+    const steamTimer = setInterval(playSteamHiss, 5200);
+    timers.push(steamTimer as unknown as number);
 
     return () => {
       timers.forEach((t) => clearInterval(t));
@@ -580,8 +580,8 @@ class DiegeticAmbientAudioEngine {
       }
     };
 
-    const snareTimer = window.setInterval(playMarchBeat, 555);
-    timers.push(snareTimer);
+    const snareTimer = setInterval(playMarchBeat, 555);
+    timers.push(snareTimer as unknown as number);
 
     return () => {
       timers.forEach((t) => clearInterval(t));
@@ -657,8 +657,9 @@ class DiegeticAmbientAudioEngine {
     activeNodes.push(drone1, drone2, droneFilter, droneGain);
 
     // Layer C: Geiger Counter Stochastic Clicks
+    let isCancelled = false;
     const triggerGeigerClick = () => {
-      if (ctx.state === 'closed') return;
+      if (isCancelled || ctx.state === 'closed') return;
       const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -677,14 +678,17 @@ class DiegeticAmbientAudioEngine {
       osc.stop(now + 0.006);
 
       // Random Poisson-like delay for next radiation click
-      const nextDelay = 80 + Math.random() * 650;
-      const geigerTimer = window.setTimeout(triggerGeigerClick, nextDelay);
-      timers.push(geigerTimer);
+      if (!isCancelled) {
+        const nextDelay = 80 + Math.random() * 650;
+        const geigerTimer = setTimeout(triggerGeigerClick, nextDelay);
+        timers.push(geigerTimer as unknown as number);
+      }
     };
 
     triggerGeigerClick();
 
     return () => {
+      isCancelled = true;
       timers.forEach((t) => {
         clearTimeout(t);
         clearInterval(t);
@@ -749,12 +753,13 @@ class DiegeticAmbientAudioEngine {
     };
 
     playClockPendulum();
-    const clockTimer = window.setInterval(playClockPendulum, 500); // 500ms between tick and tock
-    timers.push(clockTimer);
+    const clockTimer = setInterval(playClockPendulum, 500); // 500ms between tick and tock
+    timers.push(clockTimer as unknown as number);
 
     // Layer C: Gentle Fireplace Hearth Crackle (Sporadic micro-bursts of high noise)
+    let isCancelled = false;
     const playHearthCrackle = () => {
-      if (ctx.state === 'closed') return;
+      if (isCancelled || ctx.state === 'closed') return;
       const now = ctx.currentTime;
       const crackleBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.015), ctx.sampleRate);
       const data = crackleBuffer.getChannelData(0);
@@ -780,14 +785,17 @@ class DiegeticAmbientAudioEngine {
       crackleSource.start(now);
       crackleSource.stop(now + 0.016);
 
-      const nextCrackle = 90 + Math.random() * 280;
-      const hearthTimer = window.setTimeout(playHearthCrackle, nextCrackle);
-      timers.push(hearthTimer);
+      if (!isCancelled) {
+        const nextCrackle = 90 + Math.random() * 280;
+        const hearthTimer = setTimeout(playHearthCrackle, nextCrackle);
+        timers.push(hearthTimer as unknown as number);
+      }
     };
 
     playHearthCrackle();
 
     return () => {
+      isCancelled = true;
       timers.forEach((t) => {
         clearTimeout(t);
         clearInterval(t);
