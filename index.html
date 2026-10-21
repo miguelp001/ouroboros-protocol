@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Monogatari Core Styling -->
+    <link rel="stylesheet" href="/engine/core/monogatari.css">
   </head>
   <body class="bg-noir-ink text-noir-chalk font-mono overflow-hidden select-none antialiased">
     <!-- Visual CRT and 35mm Silver Halide Film Grain Overlays -->
@@ -49,16 +51,20 @@
         </div>
       </div>
 
-      <div class="hud-controls-group">
-        <button id="hud-btn-bar" class="action-card-secondary hud-nav-btn" title="Return to 1860s Sanctuary">
+      <div class="hud-controls-group" id="hud-controls-group">
+        <button id="hud-btn-bar" class="hud-button" title="Return to 1860s Sanctuary">
           [ THE THRESHOLD BAR ]
         </button>
-        <button id="hud-btn-map" class="action-card-secondary hud-nav-btn" title="Open Vignelli Subway Transit Map">
+        <button id="hud-btn-map" class="hud-button" title="Open Vignelli Subway Transit Map">
           [ TRANSIT MAP ]
         </button>
-        <button id="hud-btn-roster" class="action-card-secondary hud-nav-btn" title="View Recruited Operatives">
+        <button id="hud-btn-roster" class="hud-button" title="View Recruited Operatives">
           [ AGENCY ROSTER ]
         </button>
+      </div>
+
+      <div class="hud-locked-badge" id="hud-locked-badge">
+        [ PROTOCOL LOCK // COMPLETE PROLOGUE ]
       </div>
     </header>
 
@@ -92,6 +98,9 @@
     <!-- Animated PbtA 2d6 Dice Tray Overlay -->
     <div id="dice-overlay" class="monogatari-custom-modal hidden"></div>
 
+    <!-- Monogatari UMD Engine Script -->
+    <script src="/engine/core/monogatari.js"></script>
+    <!-- Application Logic Entrypoint -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -2,16 +2,19 @@
  * Ouroboros Protocol: Vault Zero
  * Vanilla Monogatari Main Entrypoint
  */
-import '@monogatari/core/dist/engine/core/monogatari.css';
 import './style/main.css';
 
-import Monogatari from '@monogatari/core';
 import { setupScript } from './script.js';
 import { renderTransitMap } from './engine/vanillaMap.js';
 import { renderRoster } from './engine/vanillaRoster.js';
 
-// Access monogatari engine singleton
-const monogatari = Monogatari.default || Monogatari;
+// Access browser-native Monogatari singleton (loaded via /engine/core/monogatari.js)
+const Monogatari = window.Monogatari;
+const monogatari = Monogatari?.default || Monogatari;
+
+if (!monogatari || typeof monogatari.init !== 'function') {
+  console.error('CRITICAL: Monogatari engine is not available on window.Monogatari');
+}
 
 // Configure assets directory mappings
 monogatari.setting('AssetsPath', {
@@ -28,8 +31,9 @@ monogatari.setting('AssetsPath', {
 });
 
 // Configure engine settings
+monogatari.setting('ShowMainScreen', false); // Direct start into the tactical Prologue
 monogatari.setting('TypeAnimation', true);
-monogatari.setting('TextSpeed', 35);
+monogatari.setting('TextSpeed', 30);
 monogatari.setting('AutoSave', true);
 monogatari.setting('ServiceWorkers', false);
 
@@ -157,10 +161,10 @@ monogatari.storage({
   missingKeys: '',
 });
 
-// Setup script labels
+// Setup narrative script
 setupScript(monogatari);
 
-// Bind HUD and Modals
+// Bind HUD buttons and custom modals
 function initHudListeners() {
   const barBtn = document.getElementById('hud-btn-bar');
   const mapBtn = document.getElementById('hud-btn-map');
@@ -212,12 +216,18 @@ function initHudListeners() {
   }
 }
 
-// Initialize on DOM ready
-window.addEventListener('DOMContentLoaded', () => {
+// Start engine on ready
+function start() {
   initHudListeners();
   monogatari.init('#monogatari').then(() => {
     console.log('Ouroboros Protocol: Monogatari initialized successfully.');
   }).catch((err) => {
     console.error('Monogatari init error:', err);
   });
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', start);
+} else {
+  start();
+}

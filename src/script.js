@@ -28,9 +28,13 @@ export function setupScript(monogatari) {
     if (keysCountEl) keysCountEl.textContent = `${keyCount}/3`;
 
     // Unlock HUD buttons if past prologue
-    if (s.prologueComplete) {
-      const topHud = document.getElementById('top-hud-bar');
-      if (topHud) topHud.classList.remove('hud-locked');
+    const topHud = document.getElementById('top-hud-bar');
+    if (topHud) {
+      if (s.prologueComplete) {
+        topHud.classList.remove('hud-locked');
+      } else {
+        topHud.classList.add('hud-locked');
+      }
     }
   }
 
