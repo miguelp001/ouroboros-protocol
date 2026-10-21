@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Skull,
-  AlertCircle,
   Users,
   Layers,
   ChevronRight,
@@ -33,7 +32,7 @@ import { FactionFrontsMonitor } from './components/factions/FactionFrontsMonitor
 import { GameOverModal } from './components/modals/GameOverModal';
 import { CatastrophicExtractionModal } from './components/modals/CatastrophicExtractionModal';
 import { WakeTollgateModal } from './components/modals/WakeTollgateModal';
-import { TaproomSeating } from './components/bar/TaproomSeating';
+import { ThresholdBarView } from './components/bar/ThresholdBarView';
 import { MAP_NODES, MapNode } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
 
@@ -545,12 +544,12 @@ export const App: React.FC = () => {
               />
             ) : (
               <div className="space-y-6">
-                {/* Pending Wakes Tollgate Alert */}
-                {pendingWakes.length > 0 ? (
-                  <div className="p-5 rounded-lg border-2 border-crisis bg-crisis/10 space-y-4">
+                {/* Pending Wakes Tollgate Alert Banner */}
+                {pendingWakes.length > 0 && (
+                  <div className="p-5 rounded-lg border-2 border-crisis bg-crisis/10 space-y-3">
                     <div className="flex items-center gap-2 text-crisis font-bold font-mono">
                       <Skull className="w-5 h-5 animate-pulse" />
-                      <span>TOLLGATE ALERT: {pendingWakes.length} FALLEN OPERATIVE(S) AWAIT WAKE</span>
+                      <span>TOLLGATE ALERT: {pendingWakes.length} FALLEN OPERATIVE(S) AWAIT WAKE VIGIL</span>
                     </div>
                     <p className="text-xs text-zinc-300">
                       The wooden counter of the 1860s bar is ready for the carving of the notch. 
@@ -584,18 +583,10 @@ export const App: React.FC = () => {
                       })}
                     </div>
                   </div>
-                ) : (
-                  <div className="p-6 rounded-lg border border-noir-border bg-noir-ink/40 text-center space-y-3 font-mono">
-                    <AlertCircle className="w-8 h-8 text-hazard mx-auto opacity-70" />
-                    <h4 className="font-bold text-sm text-noir-chalk">THE COUNTER BEARS {notchesOnBar} NOTCHES</h4>
-                    <p className="text-xs text-noir-muted max-w-md mx-auto">
-                      External city storms cannot penetrate this taproom. 
-                      The grandfather clock ticks methodically. No pending funerals at this hour.
-                    </p>
-                  </div>
                 )}
-                {/* Permadeath Physical Seating Along Mahogany Counter */}
-                <TaproomSeating roster={roster} />
+
+                {/* The 1860s Sanctuary Viewport */}
+                <ThresholdBarView onDeployToField={() => setActiveTab('slate')} />
               </div>
             )}
           </div>

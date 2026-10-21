@@ -281,6 +281,63 @@ class SlateAudioEngine {
       osc.stop(now + offset + 0.07);
     });
   }
+
+  // Grandfather Clock Pendulum Tick / Tock
+  public playClockTick(isTock: boolean = false) {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    const startFreq = isTock ? 240 : 340;
+    const endFreq = isTock ? 90 : 130;
+
+    osc.frequency.setValueAtTime(startFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.05);
+
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.05);
+  }
+
+  // Pouring Amber Rye Whiskey into Heavy Cut Glass
+  public playPourWhiskey() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    // Trickle drops
+    [0, 0.05, 0.11, 0.17, 0.23].forEach((offset, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(650 + idx * 80, now + offset);
+      osc.frequency.exponentialRampToValueAtTime(320, now + offset + 0.04);
+
+      gain.gain.setValueAtTime(0.09, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.04);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.04);
+    });
+
+    // Glass clink finish
+    setTimeout(() => {
+      this.playGlassClink();
+    }, 280);
+  }
 }
 
 export const soundFx = new SlateAudioEngine();
