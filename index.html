@@ -10,7 +10,88 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body class="bg-noir-ink text-noir-chalk font-mono overflow-hidden select-none antialiased">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Visual CRT and 35mm Silver Halide Film Grain Overlays -->
+    <div class="film-grain"><div class="film-grain-animated"></div></div>
+    <div class="crt-overlay"></div>
+
+    <!-- Top HUD Telemetry Bar -->
+    <header id="top-hud-bar" class="hud-locked">
+      <div class="hud-brand-group">
+        <span class="tape-badge-black font-extrabold tracking-wider">OUROBOROS PROTOCOL</span>
+        <span class="text-xs text-noir-muted">AGENT 0 // THE CIPHER</span>
+      </div>
+
+      <div class="hud-vitals-group">
+        <div class="hud-metric">
+          <span class="metric-label">VITALITY:</span>
+          <span id="hud-hp" class="metric-val text-noir-amber">10/10</span>
+        </div>
+        <div class="hud-metric">
+          <span class="metric-label">HEAT:</span>
+          <span id="hud-heat" class="metric-val">0</span>
+        </div>
+        <div class="hud-metric">
+          <span class="metric-label">WAKE:</span>
+          <span id="hud-wake" class="metric-val">0</span>
+        </div>
+        <div class="hud-metric">
+          <span class="metric-label">SHIFT:</span>
+          <span id="hud-shift" class="metric-val text-noir-amber">1</span>
+        </div>
+        <div class="hud-metric">
+          <span class="metric-label">KEYS:</span>
+          <span id="hud-keys-count" class="metric-val text-noir-amber">0/3</span>
+          <span class="flex items-center gap-1 ml-1">
+            <span id="key-sluice" class="hud-key-pip" title="Sluice Key">S</span>
+            <span id="key-apex" class="hud-key-pip" title="Apex Key">A</span>
+            <span id="key-redoubt" class="hud-key-pip" title="Redoubt Key">R</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="hud-controls-group">
+        <button id="hud-btn-bar" class="action-card-secondary hud-nav-btn" title="Return to 1860s Sanctuary">
+          [ THE THRESHOLD BAR ]
+        </button>
+        <button id="hud-btn-map" class="action-card-secondary hud-nav-btn" title="Open Vignelli Subway Transit Map">
+          [ TRANSIT MAP ]
+        </button>
+        <button id="hud-btn-roster" class="action-card-secondary hud-nav-btn" title="View Recruited Operatives">
+          [ AGENCY ROSTER ]
+        </button>
+      </div>
+    </header>
+
+    <!-- Monogatari Visual Novel Engine Container -->
+    <visual-novel id="monogatari">
+      <loading-screen></loading-screen>
+      <main-screen>
+        <main-menu></main-menu>
+      </main-screen>
+      <game-screen>
+        <dialog-log></dialog-log>
+        <text-box></text-box>
+        <quick-menu></quick-menu>
+      </game-screen>
+      <settings-screen></settings-screen>
+      <load-screen></load-screen>
+      <help-screen></help-screen>
+    </visual-novel>
+
+    <!-- Custom Modals -->
+    <!-- Transit Map Modal -->
+    <div id="transit-modal" class="monogatari-custom-modal hidden">
+      <div id="transit-modal-container" class="modal-content-box"></div>
+    </div>
+
+    <!-- Agency Roster Modal (Recruited Only) -->
+    <div id="roster-modal" class="monogatari-custom-modal hidden">
+      <div id="roster-modal-container" class="modal-content-box"></div>
+    </div>
+
+    <!-- Animated PbtA 2d6 Dice Tray Overlay -->
+    <div id="dice-overlay" class="monogatari-custom-modal hidden"></div>
+
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>
