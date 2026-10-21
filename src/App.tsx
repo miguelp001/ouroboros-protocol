@@ -22,6 +22,9 @@ import { handleMissInterruptTrigger, resolveInterruptCrisis } from './engine/int
 import { ShiftDial } from './components/slate/ShiftDial';
 import { executeShiftAdvance } from './engine/shifts';
 import { RosterView } from './components/roster/RosterView';
+import { CompanionBanterBox } from './components/companions/CompanionBanterBox';
+import { getRandomBanter, BanterLine } from './data/companionBanter';
+import { evaluateCompanionSynergy, applyMissionMoraleShift } from './engine/synergy';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
@@ -30,6 +33,8 @@ export const App: React.FC = () => {
   const [requestHelpOut, setRequestHelpOut] = useState(true);
   const [selectedCardIndex, setSelectedCardIndex] = useState(0);
   const [lastBranchNarrative, setLastBranchNarrative] = useState<string | null>(null);
+  const [companionBanter, setCompanionBanter] = useState<BanterLine | null>(null);
+  const [activePerkTrigger, setActivePerkTrigger] = useState<string | null>(null);
 
   // Store state bindings
   const storeState = useGameStore();
@@ -79,13 +84,26 @@ export const App: React.FC = () => {
       setIsRolling(true);
       soundFx.playDiceRoll();
       setLastBranchNarrative(null);
+      setCompanionBanter(null);
+      setActivePerkTrigger(null);
 
       const stat = branch.statCheck.stat;
+
+      // Check for companion synergy / perk modifier (e.g. Silas +1 on scrap vs numerical superiority)
+      const synergy = evaluateCompanionSynergy({
+        companion: activeCompanion ?? null,
+        stat,
+        isNumericSuperiority: activeStorylet.isInterrupt || activeStorylet.id === 's01_shifting_hound',
+      });
+
+      if (synergy.perkTriggered && synergy.perkDescription) {
+        setActivePerkTrigger(synergy.perkDescription);
+      }
 
       setTimeout(() => {
         const result = executePbtARoll({
           stat,
-          statMod: agentZero.stats[stat],
+          statMod: agentZero.stats[stat] + synergy.modifiedStatBonus,
           isFatigued: time.fatigued,
           companion: activeCompanion,
           requestHelpOut: requestHelpOut && !!activeCompanion,
@@ -93,6 +111,24 @@ export const App: React.FC = () => {
 
         setCurrentRoll(result);
         setIsRolling(false);
+
+        // Companion Banter generation
+        if (activeCompanion) {
+          if (result.helpOutResult?.success) {
+            setCompanionBanter(getRandomBanter(activeCompanion.id, 'helpOutSuccess'));
+          } else if (result.helpOutResult && !result.helpOutResult.success) {
+            setCompanionBanter(getRandomBanter(activeCompanion.id, 'helpOutFail'));
+          } else if (result.tier === 'CLEAN_HIT') {
+            setCompanionBanter(getRandomBanter(activeCompanion.id, 'cleanHit'));
+          } else if (result.tier === 'COSTLY_ADVANCE') {
+            setCompanionBanter(getRandomBanter(activeCompanion.id, 'costlyAdvance'));
+          } else {
+            setCompanionBanter(getRandomBanter(activeCompanion.id, 'criticalBlunder'));
+          }
+
+          // Mission morale shift
+          applyMissionMoraleShift(activeCompanion.id, result.tier);
+        }
 
         let outcomeData = branch.outcomes?.cleanHit;
         if (result.tier === 'COSTLY_ADVANCE') {
@@ -263,10 +299,20 @@ export const App: React.FC = () => {
 
             {/* PbtA Animated Resolution Tray */}
             {(currentRoll || isRolling) && (
-              <DiceTray 
-                rollResult={currentRoll} 
-                isRolling={isRolling} 
-              />
+              <div className="space-y-3">
+                <DiceTray 
+                  rollResult={currentRoll} 
+                  isRolling={isRolling} 
+                />
+
+                {activeCompanion && companionBanter && (
+                  <CompanionBanterBox
+                    companion={activeCompanion}
+                    banter={companionBanter}
+                    perkTriggered={activePerkTrigger}
+                  />
+                )}
+              </div>
             )}
           </div>
         )}
