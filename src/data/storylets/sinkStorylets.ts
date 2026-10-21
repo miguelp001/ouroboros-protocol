@@ -4,11 +4,11 @@ export const SINK_STORYLETS: Storylet[] = [
   // --- NODE S-01 (PONTOON JUNCTION) ---
   {
     id: 's01_shifting_hound',
-    title: 'THE SHIFTING HOUND // INTAKE PERIMETER',
+    title: 'PROLOGUE // THE SHIFTING HOUND',
     sector: 'sink',
     nodeId: 'S-01',
-    priority: 10,
-    narrative: `The iron grates of the culvert groan under black tidal water. Ahead, the shifting silhouette of a Tier 3 Hound circles the rusted intake valve. Its form folds like origami before snapping back into muscle and teeth. Your cracked slate buzzes against your ribs—a biometric handshake just cleared.`,
+    priority: 100,
+    narrative: `The iron grates of the culvert groan under black tidal water. Ahead, the shifting silhouette of a Tier 3 Hound circles the rusted intake valve. Its form folds like origami before snapping back into muscle and teeth. Silas Vance pulls you up the silt ramp, shouting over the rushing flood: "Up, Zero! Biometrics are synced to this dead courier's Slate. We either put a round through its folding skull or blind it with a phosphorus flare and dive for the iron door!"`,
     requirements: {
       nodeId: 'S-01',
       qualities: {
@@ -19,57 +19,93 @@ export const SINK_STORYLETS: Storylet[] = [
       {
         id: 'branch_fire_sidearm',
         label: 'Fire heavy sidearm at its unstable core',
-        description: 'Brute force discharge. Risk: weapon recoil and alert patrols.',
+        description: 'Brute force discharge [SCRAP]. Silas assists with Help Out.',
         statCheck: { stat: 'scrap' },
         outcomes: {
           cleanHit: {
-            narrative: 'A clean center-mass impact collapses the anomaly into shimmering graphite dust. The intake corridor clears without noise.',
+            narrative: 'A clean center-mass impact collapses the anomaly into shimmering graphite dust. Silas drags you up the flood wall to an impossible 1860s cast-iron door. You pull the heavy brass Threshold Key from the dead courier\'s pouch and unlock the way into sanctuary!',
             mutations: {
-              setQualities: { s01_hound_neutralized: true },
-              modifyCred: { chipCred: 15 },
+              setQualities: { 
+                s01_hound_neutralized: true,
+                prologue_completed: true,
+                intro_culvert_survived: true,
+                threshold_key_discovered: true,
+              },
+              addKeys: ['THRESHOLD_KEY'],
+              modifyCred: { chipCred: 20 },
             },
           },
           costlyAdvance: {
-            narrative: 'The blast shatters the creature, but the concussive echo rattles the flooded pipes. Local Redoubt listening posts log anomalous gunfire.',
+            narrative: 'The blast shatters the creature, but the concussive echo rattles the flooded pipes, raising heat across The Sink. Silas kicks open the antique 1860s iron door and shoves you through with the brass Threshold Key in hand.',
             mutations: {
-              setQualities: { s01_hound_neutralized: true },
+              setQualities: { 
+                s01_hound_neutralized: true,
+                prologue_completed: true,
+                intro_culvert_survived: true,
+                threshold_key_discovered: true,
+              },
+              addKeys: ['THRESHOLD_KEY'],
               modifyHeat: { sector: 'sink', delta: 1 },
             },
           },
           miss: {
-            narrative: 'The firing pin jams on silt! The beast lunges forward, tearing into your shoulder before vanishing into the pipes.',
+            narrative: 'The firing pin jams on wet silt! The beast lunges forward, tearing into your shoulder before Silas smashes his iron pipe into its ribs. Bleeding heavily, you both tumble through the unlocked 1860s iron threshold into safety.',
             mutations: {
+              setQualities: { 
+                s01_hound_neutralized: true,
+                prologue_completed: true,
+                intro_culvert_survived: true,
+                threshold_key_discovered: true,
+              },
+              addKeys: ['THRESHOLD_KEY'],
               modifyAgentHp: -3,
             },
-            interruptId: 's01_rippers_ambush',
           },
         },
       },
       {
         id: 'branch_flare_duct',
         label: 'Drop phosphorus flare and slip into drainage duct',
-        description: 'Stealth evasion. Risk: blinding flash disorienting companion.',
+        description: 'Stealth evasion [COVER]. Silas assists with Help Out.',
         statCheck: { stat: 'cover' },
         outcomes: {
           cleanHit: {
-            narrative: 'The searing phosphorus flare blinds the Hound. You slip past the rusted intake grates without leaving a trace.',
+            narrative: 'The searing phosphorus flare blinds the Hound. You and Silas slip silently past the rusted intake grates into a hidden alcove, finding an anachronistic 1860s iron door. You insert the brass Threshold Key and turn the lock.',
             mutations: {
-              setQualities: { s01_hound_neutralized: true },
+              setQualities: { 
+                s01_hound_neutralized: true,
+                prologue_completed: true,
+                intro_culvert_survived: true,
+                threshold_key_discovered: true,
+              },
+              addKeys: ['THRESHOLD_KEY'],
             },
           },
           costlyAdvance: {
-            narrative: 'You make it through the narrow duct, but sharp sheet metal tears into your flight suit, slowing your pace.',
+            narrative: 'You make it through the narrow duct, but sharp sheet metal tears into your flight suit. You collapse against an impossible 1860s cast-iron door. Silas twists the Threshold Key and pulls you into sanctuary.',
             mutations: {
-              setQualities: { s01_hound_neutralized: true },
+              setQualities: { 
+                s01_hound_neutralized: true,
+                prologue_completed: true,
+                intro_culvert_survived: true,
+                threshold_key_discovered: true,
+              },
+              addKeys: ['THRESHOLD_KEY'],
               modifyAgentHp: -1,
             },
           },
           miss: {
-            narrative: 'The flare sputters in the oily sludge. The Hound pounces from the blind spot, pinning you to the wet bulkhead.',
+            narrative: 'The flare sputters in the oily sludge. The Hound pounces from the blind spot, pinning you to the wet bulkhead before Silas bludgeons it back with a pry bar. You crash through the 1860s iron door into sanctuary.',
             mutations: {
+              setQualities: { 
+                s01_hound_neutralized: true,
+                prologue_completed: true,
+                intro_culvert_survived: true,
+                threshold_key_discovered: true,
+              },
+              addKeys: ['THRESHOLD_KEY'],
               modifyAgentHp: -3,
             },
-            interruptId: 's01_rippers_ambush',
           },
         },
       },

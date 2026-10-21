@@ -96,9 +96,20 @@ export function filterActiveStoryletDeck(
     return [state.activeInterruptStorylet as any];
   }
 
+  // During the prologue at starting node S-01, exactly one storylet is dealt to the player's hand
+  const isPrologueCompleted = Boolean(state.qualities?.prologue_completed);
+  if (!isPrologueCompleted && state.activeLocation === 'S-01') {
+    const prologueCard = storylets.find((s) => s.id === 's01_shifting_hound');
+    if (prologueCard) {
+      return [prologueCard];
+    }
+  }
+
   const eligible = storylets.filter((storylet) => {
     // Normal dealing does not deal standalone interrupt cards unless triggered
     if (storylet.isInterrupt) return false;
+    // Don't deal the prologue card once completed
+    if (isPrologueCompleted && storylet.id === 's01_shifting_hound') return false;
     return isStoryletEligible(storylet, state);
   });
 

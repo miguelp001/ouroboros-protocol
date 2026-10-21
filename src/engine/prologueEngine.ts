@@ -121,6 +121,7 @@ export class PrologueScriptEngine {
 
     // 3. Award Threshold Key & Set Progression Qualities
     store.addKey('THRESHOLD_KEY');
+    store.modifyQuality('prologue_completed', true);
     store.modifyQuality('intro_culvert_survived', true);
     store.modifyQuality('threshold_key_discovered', true);
     store.modifyQuality('bartender_met', true);

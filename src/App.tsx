@@ -82,6 +82,15 @@ export const App: React.FC = () => {
 
   const activeCompanion = roster.find((op) => op.id === storeState.activeCompanionId);
   const gateStatus = getVaultZeroGateStatus();
+  const isPrologueCompleted = Boolean(storeState.qualities?.prologue_completed);
+  const currentBackground = getLocationBackground(activeTab === 'bar' ? 'bar' : activeLocation);
+
+  // Keep player on 'slate' tab until prologue is completed
+  useEffect(() => {
+    if (!isPrologueCompleted && activeTab !== 'slate') {
+      setActiveTab('slate');
+    }
+  }, [isPrologueCompleted, activeTab]);
 
   // Synchronize Diegetic Ambient Soundscape with smooth crossfade on location or tab change
   useEffect(() => {
@@ -219,7 +228,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <SlateContainer>
+    <SlateContainer backgroundImage={currentBackground}>
       {/* Diegetic Slate Navigation Bar */}
       <SlateTabs
         activeTab={activeTab}
@@ -228,6 +237,7 @@ export const App: React.FC = () => {
         notchesOnBar={notchesOnBar}
         hasPendingWakes={pendingWakes.length > 0}
         isInterrupt={isInterrupt}
+        isPrologueCompleted={isPrologueCompleted}
       />
 
       {/* Main Slate Workspace Viewport */}
@@ -258,15 +268,7 @@ export const App: React.FC = () => {
           />
         </main>
       ) : (
-        <main className="flex-1 p-5 md:p-6 overflow-y-auto space-y-6 flex flex-col justify-between relative">
-          {/* Subtle Sector Background Atmosphere Layer */}
-          <div 
-            aria-hidden="true"
-            className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-15 mix-blend-luminosity filter contrast-125 transition-all duration-700"
-            style={{ 
-              backgroundImage: `url(${getLocationBackground(activeTab === 'bar' ? 'bar' : activeLocation)})` 
-            }}
-          />
+        <main className="flex-1 p-5 md:p-6 overflow-y-auto space-y-6 flex flex-col justify-between relative z-10">
           {activeTab === 'slate' && (
             <div className="space-y-6">
               {/* Active Sector Header */}
@@ -325,6 +327,8 @@ export const App: React.FC = () => {
                   <span className={`px-2.5 py-1 text-[11px] font-bold rounded font-mono border flex items-center gap-1.5 ${
                     isInterrupt 
                       ? 'border-crisis bg-crisis/20 text-crisis animate-pulse' 
+                      : !isPrologueCompleted
+                      ? 'border-hazard bg-hazard/20 text-hazard font-bold animate-pulse'
                       : 'bg-hazard/10 border-hazard/40 text-hazard'
                   }`}>
                     {isInterrupt ? (
@@ -332,6 +336,8 @@ export const App: React.FC = () => {
                         <ShieldAlert className="w-3.5 h-3.5" />
                         CRITICAL INTERRUPT LOCK
                       </>
+                    ) : !isPrologueCompleted ? (
+                      'PROLOGUE SEQUENCE (1 CARD)'
                     ) : (
                       `QBN HAND (${activeDeck.length} CARDS)`
                     )}

@@ -348,8 +348,9 @@ export const INITIAL_GAME_STATE: GameEngineState = {
     maxHp: 10,
   },
   qualities: {
+    prologue_completed: false,
     intro_culvert_survived: true,
-    threshold_key_discovered: true,
+    threshold_key_discovered: false,
     bartender_met: false,
     vault_zero_rumors: true,
     s01_hound_neutralized: false,
