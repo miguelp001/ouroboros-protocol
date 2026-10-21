@@ -13,7 +13,7 @@ describe('Diegetic Slate App Scaffolding', () => {
     render(<App />);
     const mapTab = screen.getByRole('button', { name: /02 \/\/ TRANSIT MAP/i });
     fireEvent.click(mapTab);
-    expect(screen.getByText(/VIGNELLI TRANSIT NETWORK/i)).toBeInTheDocument();
+    expect(screen.getByText(/VIGNELLI TRANSIT SCHEMATIC/i)).toBeInTheDocument();
   });
 
   it('simulates a PbtA 2d6 action check', () => {
