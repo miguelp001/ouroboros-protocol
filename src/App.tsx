@@ -315,6 +315,7 @@ export const App: React.FC = () => {
             roster={roster}
             activeCompanionId={storeState.activeCompanionId}
             onDeployCompanion={(id) => storeState.setActiveCompanion(id)}
+            onRecruitOperative={(id) => storeState.recruitOperative(id)}
             onAssignWorkstation={(id, type) => {
               storeState.assignOperative(id, {
                 type,

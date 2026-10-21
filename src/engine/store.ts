@@ -29,6 +29,7 @@ export interface GameEngineStore extends GameEngineState {
   modifyAgentZeroHp: (delta: number) => { triggeredExtraction: boolean; fallenCompanion: Operative | null };
 
   // Roster & Companions
+  recruitOperative: (id: string) => void;
   setActiveCompanion: (id: string | null) => void;
   assignOperative: (id: string, assignment: OperativeAssignment | null) => void;
   modifyOperativeHp: (id: string, delta: number) => void;
@@ -268,6 +269,23 @@ export const useGameStore = create<GameEngineStore>((set, get) => ({
     });
 
     return { triggeredExtraction: true, fallenCompanion };
+  },
+
+  recruitOperative: (id) => {
+    set((state) => ({
+      roster: state.roster.map((op) => {
+        if (op.id !== id) return op;
+        return {
+          ...op,
+          status: 'ACTIVE' as const,
+          morale: 85,
+          epitaphLedger: [
+            ...op.epitaphLedger,
+            `Recruited into Agent 0's Agency at node ${state.activeLocation}.`,
+          ],
+        };
+      }),
+    }));
   },
 
   setActiveCompanion: (id) => {

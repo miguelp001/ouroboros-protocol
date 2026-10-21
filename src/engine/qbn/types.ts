@@ -25,6 +25,7 @@ export interface StateMutations {
   modifyAgentHp?: number;
   addKeys?: string[];
   advanceShift?: boolean;
+  recruitOperative?: string;
 }
 
 export interface StoryletOutcome {

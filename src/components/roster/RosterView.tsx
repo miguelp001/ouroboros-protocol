@@ -7,7 +7,9 @@ import {
   Stethoscope, 
   Compass, 
   UserCheck, 
-  Eye 
+  Eye, 
+  Lock,
+  MapPin
 } from 'lucide-react';
 import { OperativeDossierModal } from './OperativeDossierModal';
 import { soundFx } from '../../audio/soundFx';
@@ -17,6 +19,7 @@ interface RosterViewProps {
   activeCompanionId: string | null;
   onDeployCompanion: (id: string) => void;
   onAssignWorkstation: (id: string, type: 'FORGE' | 'INFIRMARY' | 'SCOUT') => void;
+  onRecruitOperative?: (id: string) => void;
 }
 
 export const RosterView: React.FC<RosterViewProps> = ({
@@ -24,12 +27,18 @@ export const RosterView: React.FC<RosterViewProps> = ({
   activeCompanionId,
   onDeployCompanion,
   onAssignWorkstation,
+  onRecruitOperative,
 }) => {
-  const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'ASSIGNED' | 'DEAD'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'UNRECRUITED' | 'ASSIGNED' | 'DEAD'>('ALL');
   const [selectedOperative, setSelectedOperative] = useState<Operative | null>(null);
 
+  const activeCount = roster.filter((op) => op.status === 'ACTIVE').length;
+  const unrecruitedCount = roster.filter((op) => op.status === 'UNRECRUITED').length;
+  const deadCount = roster.filter((op) => op.status === 'DEAD' || op.status === 'MUTINIED').length;
+
   const filteredRoster = roster.filter((op) => {
-    if (filter === 'ACTIVE') return op.status === 'ACTIVE' && !op.activeAssignment;
+    if (filter === 'ACTIVE') return op.status === 'ACTIVE';
+    if (filter === 'UNRECRUITED') return op.status === 'UNRECRUITED';
     if (filter === 'ASSIGNED') return op.status === 'ACTIVE' && !!op.activeAssignment;
     if (filter === 'DEAD') return op.status === 'DEAD' || op.status === 'MUTINIED';
     return true;
@@ -40,13 +49,15 @@ export const RosterView: React.FC<RosterViewProps> = ({
       {/* Header & Filter Controls */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-noir-border pb-3">
         <div>
-          <h3 className="font-bold text-base text-noir-chalk font-mono">AGENCY DOSSIER // 15 BESPOKE OPERATIVES</h3>
-          <p className="text-xs text-noir-muted">Field deployment, safehouse workstations, and casualty monitoring.</p>
+          <h3 className="font-bold text-base text-noir-chalk font-mono">AGENCY ROSTER // 15 OPERATIVES</h3>
+          <p className="text-xs text-noir-muted">
+            Active: <strong className="text-emerald-400">{activeCount}</strong> | Unrecruited: <strong className="text-zinc-400">{unrecruitedCount}</strong> | Casualties: <strong className="text-crisis">{deadCount}</strong>
+          </p>
         </div>
 
         {/* Filter Chips */}
-        <div className="flex items-center gap-1.5 text-xs">
-          {(['ALL', 'ACTIVE', 'ASSIGNED', 'DEAD'] as const).map((mode) => (
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          {(['ALL', 'ACTIVE', 'UNRECRUITED', 'ASSIGNED', 'DEAD'] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => {
@@ -59,7 +70,7 @@ export const RosterView: React.FC<RosterViewProps> = ({
                   : 'border-noir-border bg-noir-surface text-noir-muted hover:text-noir-chalk'
               }`}
             >
-              {mode}
+              {mode} {mode === 'ACTIVE' ? `(${activeCount})` : mode === 'UNRECRUITED' ? `(${unrecruitedCount})` : ''}
             </button>
           ))}
         </div>
@@ -70,6 +81,7 @@ export const RosterView: React.FC<RosterViewProps> = ({
         {filteredRoster.map((op) => {
           const isDead = op.status === 'DEAD';
           const isMutinied = op.status === 'MUTINIED';
+          const isUnrecruited = op.status === 'UNRECRUITED';
           const isCompanion = op.id === activeCompanionId;
 
           return (
@@ -80,6 +92,8 @@ export const RosterView: React.FC<RosterViewProps> = ({
                 p-3.5 rounded border text-xs space-y-2.5 cursor-pointer transition-all duration-150
                 ${isCompanion 
                   ? 'border-hazard bg-hazard/5 shadow-[0_0_12px_rgba(250,204,21,0.15)]' 
+                  : isUnrecruited
+                  ? 'border-dashed border-zinc-700 bg-noir-surface/40 hover:border-zinc-500'
                   : isDead 
                   ? 'border-crisis/40 bg-crisis/5 opacity-60' 
                   : isMutinied
@@ -89,7 +103,7 @@ export const RosterView: React.FC<RosterViewProps> = ({
             >
               {/* Header: Name, Callsign, Status */}
               <div className="flex items-center justify-between">
-                <span className={`font-bold ${isDead ? 'line-through text-crisis' : 'text-noir-chalk'}`}>
+                <span className={`font-bold ${isDead ? 'line-through text-crisis' : isUnrecruited ? 'text-zinc-400' : 'text-noir-chalk'}`}>
                   {op.name}
                 </span>
 
@@ -97,29 +111,46 @@ export const RosterView: React.FC<RosterViewProps> = ({
                   {isCompanion && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-hazard text-noir-ink font-bold flex items-center gap-1">
                       <UserCheck className="w-2.5 h-2.5" />
-                      DEPLOYED
+                      ACTIVE
                     </span>
                   )}
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-hazard">
-                    {op.callsign}
-                  </span>
+                  {isUnrecruited ? (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-500 flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5" />
+                      LOCKED
+                    </span>
+                  ) : (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-hazard">
+                      {op.callsign}
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Role & Vitals Bar */}
               <div className="flex items-center justify-between text-[11px] text-noir-muted">
                 <span>{op.role}</span>
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1">
-                    <Heart className="w-3 h-3 text-red-400" />
-                    {op.hp}/{op.maxHp}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Smile className="w-3 h-3 text-hazard" />
-                    {op.morale}%
-                  </span>
-                </div>
+                {!isUnrecruited && (
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3 h-3 text-red-400" />
+                      {op.hp}/{op.maxHp}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Smile className="w-3 h-3 text-hazard" />
+                      {op.morale}%
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {/* Recruitment Intel (if unrecruited) */}
+              {isUnrecruited && (
+                <div className="text-[10px] p-2 rounded bg-zinc-900/80 border border-zinc-800 text-zinc-400 flex items-center gap-1.5">
+                  <MapPin className="w-3 h-3 text-hazard shrink-0" />
+                  <span className="truncate">Intel: {op.recruitmentLocation ?? 'Somewhere in Metropolis'}</span>
+                </div>
+              )}
 
               {/* Workstation Badge */}
               {op.activeAssignment && (
@@ -152,6 +183,7 @@ export const RosterView: React.FC<RosterViewProps> = ({
           onClose={() => setSelectedOperative(null)}
           onDeployCompanion={onDeployCompanion}
           onAssignWorkstation={onAssignWorkstation}
+          onRecruitOperative={onRecruitOperative}
         />
       )}
     </div>

@@ -50,9 +50,32 @@ describe('15 Bespoke Operatives Roster', () => {
     });
   });
 
+  it('starts with Silas Vance as the sole active scrapper companion, while 14 others are unrecruited', () => {
+    const roster = useGameStore.getState().roster;
+    const active = roster.filter((op) => op.status === 'ACTIVE');
+    const unrecruited = roster.filter((op) => op.status === 'UNRECRUITED');
+
+    expect(active.length).toBe(1);
+    expect(active[0].id).toBe('silas_vance');
+    expect(active[0].role).toContain('Scrapper');
+    expect(unrecruited.length).toBe(14);
+    expect(useGameStore.getState().activeCompanionId).toBe('silas_vance');
+  });
+
+  it('recruits an operative through play, transitioning them to ACTIVE', () => {
+    expect(useGameStore.getState().roster.find((op) => op.id === 'cora_ramos')?.status).toBe('UNRECRUITED');
+
+    useGameStore.getState().recruitOperative('cora_ramos');
+
+    const cora = useGameStore.getState().roster.find((op) => op.id === 'cora_ramos');
+    expect(cora?.status).toBe('ACTIVE');
+    expect(cora?.epitaphLedger.some((e) => e.includes('Recruited into Agent 0'))).toBe(true);
+  });
+
   it('allows swapping active field companion', () => {
     expect(useGameStore.getState().activeCompanionId).toBe('silas_vance');
 
+    useGameStore.getState().recruitOperative('cora_ramos');
     useGameStore.getState().setActiveCompanion('cora_ramos');
     expect(useGameStore.getState().activeCompanionId).toBe('cora_ramos');
 

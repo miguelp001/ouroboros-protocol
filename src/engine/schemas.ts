@@ -27,13 +27,14 @@ export const OperativeSchema = z.object({
   callsign: z.string(),
   role: z.string(),
   stats: AgentStatsSchema,
-  status: z.enum(['ACTIVE', 'DEAD', 'MUTINIED']),
+  status: z.enum(['ACTIVE', 'UNRECRUITED', 'DEAD', 'MUTINIED']),
   hp: z.number().int().min(0),
   maxHp: z.number().int().positive(),
   morale: z.number().int().min(0).max(100),
   activeAssignment: OperativeAssignmentSchema.nullable(),
   epitaphLedger: z.array(z.string()),
   loyaltyPerk: z.string(),
+  recruitmentLocation: z.string().optional(),
 });
 
 export const FactionFrontSchema = z.object({

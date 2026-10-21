@@ -149,4 +149,9 @@ export function executeStateMutations(mutations: StateMutations): void {
   if (mutations.advanceShift) {
     store.advanceShift();
   }
+
+  // 7. Recruit Operative
+  if (mutations.recruitOperative) {
+    store.recruitOperative(mutations.recruitOperative);
+  }
 }

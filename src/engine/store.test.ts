@@ -45,6 +45,14 @@ describe('GameEngineStore & State Machine', () => {
   });
 
   it('advances persistent workstation assignments across shifts', () => {
+    useGameStore.getState().recruitOperative('jax_tinker');
+    useGameStore.getState().assignOperative('jax_tinker', {
+      type: 'FORGE',
+      target: 'Tungsten-Reinforced Slate Frame',
+      progress: 0,
+      maxProgress: 3,
+    });
+
     const jax = useGameStore.getState().roster.find((op) => op.id === 'jax_tinker');
     expect(jax?.activeAssignment?.type).toBe('FORGE');
     expect(jax?.activeAssignment?.progress).toBe(0);
@@ -88,6 +96,7 @@ describe('GameEngineStore & State Machine', () => {
   });
 
   it('handles Attending the Wake vs Blowing it Off', () => {
+    useGameStore.getState().recruitOperative('dr_aris_voss');
     useGameStore.getState().markOperativeFallen('cora_ramos', 'Killed in an ambush in Old Town');
     expect(useGameStore.getState().pendingWakes).toContain('cora_ramos');
 

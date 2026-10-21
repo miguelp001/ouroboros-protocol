@@ -17,7 +17,7 @@ import {
 export type AgentZeroStats = z.infer<typeof AgentStatsSchema>;
 export type AgentZero = z.infer<typeof AgentZeroSchema>;
 export type OperativeAssignment = z.infer<typeof OperativeAssignmentSchema>;
-export type OperativeStatus = 'ACTIVE' | 'DEAD' | 'MUTINIED';
+export type OperativeStatus = 'ACTIVE' | 'UNRECRUITED' | 'DEAD' | 'MUTINIED';
 export type Operative = z.infer<typeof OperativeSchema>;
 export type FactionFront = z.infer<typeof FactionFrontSchema>;
 export type FactionStats = z.infer<typeof FactionStatsSchema>;

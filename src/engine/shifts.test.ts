@@ -48,6 +48,14 @@ describe('Shift & Action Economy Engine', () => {
   });
 
   it('advances locked-in workstation assignments on each shift', () => {
+    useGameStore.getState().recruitOperative('jax_tinker');
+    useGameStore.getState().assignOperative('jax_tinker', {
+      type: 'FORGE',
+      target: 'Tungsten-Reinforced Slate Frame',
+      progress: 0,
+      maxProgress: 3,
+    });
+
     const jax = useGameStore.getState().roster.find((op) => op.id === 'jax_tinker');
     expect(jax?.activeAssignment?.type).toBe('FORGE');
     expect(jax?.activeAssignment?.progress).toBe(0);
