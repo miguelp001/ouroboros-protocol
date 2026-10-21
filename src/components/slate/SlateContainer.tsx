@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SlateScanlines } from './SlateScanlines';
 import { SlateHeader } from './SlateHeader';
 import { soundFx } from '../../audio/soundFx';
+import { useGameStore } from '../../engine/store';
 
 interface SlateContainerProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ export const SlateContainer: React.FC<SlateContainerProps> = ({
 }) => {
   const [isTilted, setIsTilted] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const isInterrupt = useGameStore((state) => state.isInterrupt);
 
   const handleToggleMute = () => {
     const next = !isMuted;
@@ -32,8 +34,11 @@ export const SlateContainer: React.FC<SlateContainerProps> = ({
       <div className={`w-full max-w-5xl h-[92vh] flex flex-col ${isTilted ? 'slate-perspective' : ''}`}>
         <div 
           className={`
-            relative w-full h-full flex flex-col bg-noir-surface border-2 border-noir-border rounded-xl shadow-slate-bevel overflow-hidden
-            ${isTilted ? 'slate-tilt' : 'transition-transform duration-300'}
+            relative w-full h-full flex flex-col bg-noir-surface rounded-xl overflow-hidden transition-all duration-300
+            ${isInterrupt 
+              ? 'border-2 border-crisis shadow-[0_0_35px_rgba(239,68,68,0.35)]' 
+              : 'border-2 border-noir-border shadow-slate-bevel'}
+            ${isTilted ? 'slate-tilt' : ''}
           `}
         >
           {/* Bezel Screw Rivets (Top-Left, Top-Right, Bottom-Left, Bottom-Right) */}

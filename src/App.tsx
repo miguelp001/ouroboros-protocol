@@ -8,7 +8,8 @@ import {
   AlertCircle,
   Users,
   Layers,
-  ChevronRight
+  ChevronRight,
+  ShieldAlert
 } from 'lucide-react';
 import { useGameStore } from './engine/store';
 import { SlateContainer } from './components/slate/SlateContainer';
@@ -20,7 +21,8 @@ import { soundFx } from './audio/soundFx';
 import { executePbtARoll, DetailedRollResult } from './engine/pbta';
 import { SINK_STORYLETS } from './data/storylets/sinkStorylets';
 import { filterActiveStoryletDeck, executeStateMutations } from './engine/qbn/evaluator';
-import { StoryletBranch } from './engine/qbn/types';
+import { StoryletBranch, Storylet } from './engine/qbn/types';
+import { handleMissInterruptTrigger, resolveInterruptCrisis } from './engine/interruptEngine';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
@@ -40,20 +42,22 @@ export const App: React.FC = () => {
   const notchesOnBar = storeState.notchesOnBar;
   const pendingWakes = storeState.pendingWakes;
   const isInterrupt = storeState.isInterrupt;
+  const activeInterruptStorylet = storeState.activeInterruptStorylet as unknown as Storylet | null;
 
   // Store actions
   const advanceShift = storeState.advanceShift;
   const restAtBar = storeState.restAtBar;
   const resolveWake = storeState.resolveWake;
-  const triggerInterrupt = storeState.triggerInterrupt;
-  const resolveInterrupt = storeState.resolveInterrupt;
 
   const activeCompanion = roster.find((op) => op.id === storeState.activeCompanionId);
 
   // Dynamically compute active QBN deck for current node and world qualities
   const activeDeck = useMemo(() => {
+    if (isInterrupt && activeInterruptStorylet) {
+      return [activeInterruptStorylet];
+    }
     return filterActiveStoryletDeck(SINK_STORYLETS, storeState);
-  }, [storeState, SINK_STORYLETS]);
+  }, [storeState, SINK_STORYLETS, isInterrupt, activeInterruptStorylet]);
 
   const activeStorylet = activeDeck[selectedCardIndex] ?? activeDeck[0];
 
@@ -62,7 +66,10 @@ export const App: React.FC = () => {
     if (branch.directOutcome) {
       soundFx.playClick();
       setLastBranchNarrative(branch.directOutcome.narrative);
-      if (branch.directOutcome.mutations) {
+
+      if (isInterrupt) {
+        resolveInterruptCrisis(branch.directOutcome.mutations);
+      } else if (branch.directOutcome.mutations) {
         executeStateMutations(branch.directOutcome.mutations);
       }
       return;
@@ -96,18 +103,25 @@ export const App: React.FC = () => {
           outcomeData = branch.outcomes?.miss;
           setTimeout(() => soundFx.playGlitch(), 150);
 
-          // If miss triggers an interrupt card, check interrupt ID
-          if (outcomeData?.interruptId) {
-            const interruptStorylet = SINK_STORYLETS.find((s) => s.id === outcomeData?.interruptId);
-            if (interruptStorylet) {
-              triggerInterrupt(interruptStorylet as any);
-            }
+          if (!isInterrupt) {
+            // Standard roll MISS -> Trigger Interrupt Card!
+            handleMissInterruptTrigger(outcomeData?.interruptId);
+            setActiveTab('slate');
+            setSelectedCardIndex(0);
           }
         }
 
         if (outcomeData) {
           setLastBranchNarrative(outcomeData.narrative);
-          if (outcomeData.mutations) {
+
+          if (isInterrupt) {
+            // Resolving the active crisis on 7+ (Clean Hit or Costly Advance)
+            if (result.tier !== 'MISS') {
+              resolveInterruptCrisis(outcomeData.mutations);
+            } else if (outcomeData.mutations) {
+              executeStateMutations(outcomeData.mutations);
+            }
+          } else if (outcomeData.mutations) {
             executeStateMutations(outcomeData.mutations);
           }
         }
@@ -124,6 +138,7 @@ export const App: React.FC = () => {
         activeRosterCount={roster.filter(r => r.status === 'ACTIVE').length}
         notchesOnBar={notchesOnBar}
         hasPendingWakes={pendingWakes.length > 0}
+        isInterrupt={isInterrupt}
       />
 
       {/* Main Slate Workspace Viewport */}
@@ -135,19 +150,11 @@ export const App: React.FC = () => {
               <div>
                 <div className="text-[10px] text-hazard tracking-widest uppercase font-mono">LOCATION NODE: {activeLocation}</div>
                 <h2 className="text-xl font-bold tracking-tight text-noir-chalk font-mono">
-                  THE SUBMERGED SPUR // PONTOON JUNCTION
+                  {isInterrupt ? 'EMERGENCY PERIMETER LOCKDOWN' : 'THE SUBMERGED SPUR // PONTOON JUNCTION'}
                 </h2>
               </div>
               <div className="flex items-center gap-2">
-                {isInterrupt ? (
-                  <SlateButton
-                    variant="crisis"
-                    onClick={() => resolveInterrupt()}
-                    className="text-xs"
-                  >
-                    DISMISS INTERRUPT
-                  </SlateButton>
-                ) : (
+                {!isInterrupt && (
                   <SlateButton
                     variant="neutral"
                     onClick={() => advanceShift(false)}
@@ -156,12 +163,19 @@ export const App: React.FC = () => {
                     ADVANCE SHIFT
                   </SlateButton>
                 )}
-                <span className={`px-2.5 py-1 text-[11px] font-bold rounded font-mono border ${
+                <span className={`px-2.5 py-1 text-[11px] font-bold rounded font-mono border flex items-center gap-1.5 ${
                   isInterrupt 
-                    ? 'border-crisis/80 bg-crisis/20 text-crisis' 
+                    ? 'border-crisis bg-crisis/20 text-crisis animate-pulse' 
                     : 'bg-hazard/10 border-hazard/40 text-hazard'
                 }`}>
-                  {isInterrupt ? 'CRISIS LOCK ACTIVE' : `QBN HAND (${activeDeck.length} CARDS)`}
+                  {isInterrupt ? (
+                    <>
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      CRITICAL INTERRUPT LOCK
+                    </>
+                  ) : (
+                    `QBN HAND (${activeDeck.length} CARDS)`
+                  )}
                 </span>
               </div>
             </div>
@@ -217,7 +231,7 @@ export const App: React.FC = () => {
               </div>
             )}
 
-            {/* Active Storylet Card */}
+            {/* Active Storylet / Interrupt Card */}
             {activeStorylet ? (
               <StoryletCard
                 storylet={activeStorylet}
@@ -421,10 +435,10 @@ export const App: React.FC = () => {
         {/* Slate Footer Diagnostics */}
         <footer className="pt-3 border-t border-noir-border/60 flex items-center justify-between text-[11px] text-noir-muted font-mono">
           <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-hazard" />
-            OUROBOROS KERNEL: OPERATIONAL
+            <span className={`w-1.5 h-1.5 rounded-full ${isInterrupt ? 'bg-crisis animate-ping' : 'bg-hazard'}`} />
+            {isInterrupt ? 'OUROBOROS WARNING: THREAT INTERCEPT ACTIVE' : 'OUROBOROS KERNEL: OPERATIONAL'}
           </span>
-          <span>PHASE 5: QUALITY-BASED NARRATIVE (QBN) ENGINE ACTIVE</span>
+          <span>PHASE 6: INTERRUPT DECK & CRISIS INTERCEPTOR ACTIVE</span>
         </footer>
       </main>
     </SlateContainer>
