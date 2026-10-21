@@ -35,6 +35,7 @@ build
 out
 .cache
 coverage
+*.tsbuildinfo
 
 # Operating System files
 Thumbs.db
