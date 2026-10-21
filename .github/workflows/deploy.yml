@@ -29,12 +29,9 @@ jobs:
         run: npm run build
 
       - name: Deploy to DreamHost via SFTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.DREAMHOST_HOST || 'iad1-shared-b7-01.Dreamhost.com' }}
-          username: ${{ secrets.DREAMHOST_USER || 'dh_x4cege' }}
-          password: ${{ secrets.DREAMHOST_PASSWORD || 'dynasloth32' }}
-          server-dir: ${{ secrets.DREAMHOST_REMOTE_DIR || '/home/dh_x4cege/agent0.aredpanic.com/' }}
-          local-dir: ./dist/
-          protocol: sftp
-          port: 22
+        run: node scripts/deploy.js
+        env:
+          DREAMHOST_HOST: ${{ secrets.DREAMHOST_HOST || 'iad1-shared-b7-01.Dreamhost.com' }}
+          DREAMHOST_USER: ${{ secrets.DREAMHOST_USER || 'dh_x4cege' }}
+          DREAMHOST_PASSWORD: ${{ secrets.DREAMHOST_PASSWORD || 'dynasloth32' }}
+          DREAMHOST_REMOTE_DIR: ${{ secrets.DREAMHOST_REMOTE_DIR || '/home/dh_x4cege/agent0.aredpanic.com' }}
