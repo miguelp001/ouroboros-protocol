@@ -26,6 +26,10 @@ import { SafehouseView } from './components/safehouse/SafehouseView';
 import { CompanionBanterBox } from './components/companions/CompanionBanterBox';
 import { getRandomBanter, BanterLine } from './data/companionBanter';
 import { evaluateCompanionSynergy, applyMissionMoraleShift } from './engine/synergy';
+import { VignelliMap } from './components/map/VignelliMap';
+import { NodeTelemetryCard } from './components/map/NodeTelemetryCard';
+import { MAP_NODES, MapNode } from './data/transitMapData';
+import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
@@ -43,12 +47,15 @@ export const App: React.FC = () => {
   const time = storeState.time;
   const agentZero = storeState.agentZero;
   const roster = storeState.roster;
-  const factions = storeState.factions;
   const activeLocation = storeState.activeLocation;
   const notchesOnBar = storeState.notchesOnBar;
   const pendingWakes = storeState.pendingWakes;
   const isInterrupt = storeState.isInterrupt;
   const activeInterruptStorylet = storeState.activeInterruptStorylet as unknown as Storylet | null;
+
+  const [selectedMapNode, setSelectedMapNode] = useState<MapNode>(
+    MAP_NODES[activeLocation] ?? MAP_NODES['S-01']
+  );
 
   // Store actions
   const restAtBar = storeState.restAtBar;
@@ -320,41 +327,41 @@ export const App: React.FC = () => {
         )}
 
         {activeTab === 'map' && (
-          <div className="h-full space-y-4">
-            <div className="flex items-center justify-between border-b border-noir-border pb-3">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-noir-border pb-3">
               <div>
                 <h3 className="font-bold text-base text-noir-chalk font-mono">VIGNELLI TRANSIT SCHEMATIC</h3>
                 <p className="text-xs text-noir-muted">Sub-surface transit lines and regional anomaly clusters.</p>
               </div>
-              <div className="text-xs font-mono text-hazard">
-                ACTIVE SECTOR: THE SINK (LINE B)
+              <div className="text-xs font-mono text-hazard flex items-center gap-2">
+                <span>ACTIVE NODE:</span>
+                <strong className="text-noir-chalk bg-noir-surface px-2 py-0.5 rounded border border-noir-border">
+                  {activeLocation} // {MAP_NODES[activeLocation]?.name ?? 'UNKNOWN'}
+                </strong>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(factions).map(([id, faction]) => (
-                <div key={id} className="p-4 rounded border border-noir-border bg-noir-ink/60 space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-zinc-300 font-mono">
-                    <span>{faction.name.toUpperCase()}</span>
-                    <span className="text-hazard">SUSPICION: {faction.suspicionLevel}/4</span>
-                  </div>
-                  {faction.activeFronts.map((front) => (
-                    <div key={front.id} className="space-y-1 font-mono">
-                      <div className="flex justify-between text-[11px] text-noir-muted">
-                        <span>{front.name}</span>
-                        <span>{front.progress}/{front.max} CLOCK</span>
-                      </div>
-                      <div className="w-full bg-noir-border h-1.5 rounded overflow-hidden">
-                        <div 
-                          className="bg-hazard h-full transition-all"
-                          style={{ width: `${(front.progress / front.max) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
+            {/* Interactive Vector Subway Schematic */}
+            <VignelliMap
+              activeLocationId={activeLocation}
+              selectedNodeId={selectedMapNode.id}
+              onSelectNode={(node) => setSelectedMapNode(node)}
+              adjacentNodeIds={getAdjacentNodes(activeLocation)}
+            />
+
+            {/* Selected Node Telemetry Card */}
+            <NodeTelemetryCard
+              node={selectedMapNode}
+              isCurrentLocation={selectedMapNode.id === activeLocation}
+              travelCheck={canTravelToNode(activeLocation, selectedMapNode.id, storeState.agency.keys)}
+              currentSectorHeat={storeState.economy.heat[selectedMapNode.sector] ?? 0}
+              onInitiateTravel={(nodeId) => {
+                const res = travelToDestination(nodeId);
+                if (res.success) {
+                  setSelectedMapNode(MAP_NODES[nodeId] ?? selectedMapNode);
+                }
+              }}
+            />
           </div>
         )}
 
