@@ -1,0 +1,40 @@
+name: Deploy Ouroboros Protocol to DreamHost
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Vitest Suite
+        run: npm test
+
+      - name: Build Production Assets
+        run: npm run build
+
+      - name: Deploy to DreamHost via SFTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.DREAMHOST_HOST || 'iad1-shared-b7-01.Dreamhost.com' }}
+          username: ${{ secrets.DREAMHOST_USER || 'dh_x4cege' }}
+          password: ${{ secrets.DREAMHOST_PASSWORD || 'dynasloth32' }}
+          server-dir: ${{ secrets.DREAMHOST_REMOTE_DIR || '/home/dh_x4cege/agent0.aredpanic.com/' }}
+          local-dir: ./dist/
+          protocol: sftp
+          port: 22
