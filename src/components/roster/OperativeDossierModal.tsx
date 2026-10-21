@@ -16,6 +16,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import { SlateButton } from '../slate/SlateButton';
+import { getOperativePortrait } from '../../utils/assets';
 
 interface OperativeDossierModalProps {
   operative: Operative | null;
@@ -45,35 +46,51 @@ export const OperativeDossierModal: React.FC<OperativeDossierModalProps> = ({
       <div className="relative w-full max-w-2xl bg-noir-surface border-2 border-noir-border rounded-xl shadow-slate-bevel p-6 space-y-5 max-h-[90vh] overflow-y-auto">
         
         {/* Top Header */}
-        <div className="flex items-start justify-between border-b border-noir-border pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className={`px-2 py-0.5 text-[10px] rounded font-bold uppercase ${
-                isUnrecruited
-                  ? 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-                  : isDead 
-                  ? 'bg-crisis/20 text-crisis border border-crisis' 
-                  : isMutinied 
-                  ? 'bg-amber-950 text-amber-400 border border-amber-600'
-                  : 'bg-hazard/10 text-hazard border border-hazard/40'
-              }`}>
-                STATUS: {operative.status}
-              </span>
-              <span className="text-zinc-500 text-xs">
-                {isUnrecruited ? '// UNRESOLVED FIELD INTEL' : '// DOSSIER CLASSIFIED'}
-              </span>
+        <div className="flex items-start justify-between border-b border-noir-border pb-4 gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 border-noir-border bg-noir-ink shrink-0 overflow-hidden relative shadow-md">
+              <img
+                src={getOperativePortrait(operative.id)}
+                alt={operative.name}
+                className={`w-full h-full object-cover ${isDead ? 'grayscale opacity-40' : isUnrecruited ? 'opacity-40 blur-[0.5px]' : ''}`}
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center -z-10 text-xs text-zinc-600 font-bold">
+                {operative.callsign}
+              </div>
             </div>
 
-            <h2 className="text-xl font-bold tracking-tight text-noir-chalk mt-1 flex items-center gap-2">
-              <span>{operative.name}</span>
-              <span className="text-hazard text-base">"{operative.callsign}"</span>
-            </h2>
-            <p className="text-xs text-noir-muted">{operative.role}</p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 text-[10px] rounded font-bold uppercase ${
+                  isUnrecruited
+                    ? 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                    : isDead 
+                    ? 'bg-crisis/20 text-crisis border border-crisis' 
+                    : isMutinied 
+                    ? 'bg-amber-950 text-amber-400 border border-amber-600'
+                    : 'bg-hazard/10 text-hazard border border-hazard/40'
+                }`}>
+                  STATUS: {operative.status}
+                </span>
+                <span className="text-zinc-500 text-xs truncate">
+                  {isUnrecruited ? '// UNRESOLVED INTEL' : '// DOSSIER'}
+                </span>
+              </div>
+
+              <h2 className="text-xl font-bold tracking-tight text-noir-chalk mt-1 flex items-center gap-2 truncate">
+                <span>{operative.name}</span>
+                <span className="text-hazard text-base">"{operative.callsign}"</span>
+              </h2>
+              <p className="text-xs text-noir-muted truncate">{operative.role}</p>
+            </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1 rounded text-noir-muted hover:text-noir-chalk hover:bg-noir-elevated transition-colors"
+            className="p-1 rounded text-noir-muted hover:text-noir-chalk hover:bg-noir-elevated transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>

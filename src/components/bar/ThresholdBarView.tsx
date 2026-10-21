@@ -22,6 +22,7 @@ import {
   exitThresholdBarToField 
 } from '../../engine/sanctuaryEngine';
 import { MAP_NODES } from '../../data/transitMapData';
+import { getLocationBackground } from '../../utils/assets';
 
 interface ThresholdBarViewProps {
   onDeployToField?: (nodeId: string) => void;
@@ -86,7 +87,14 @@ export const ThresholdBarView: React.FC<ThresholdBarViewProps> = ({
   return (
     <div className="space-y-6 font-mono text-xs">
       {/* 1860s Sanctuary Atmosphere Banner */}
-      <div className="relative rounded-lg border-2 border-amber-900/70 bg-gradient-to-r from-stone-950 via-stone-900 to-amber-950/40 p-5 shadow-lg shadow-amber-950/30 overflow-hidden">
+      <div className="relative rounded-lg border-2 border-amber-900/70 bg-stone-950 p-5 shadow-lg shadow-amber-950/30 overflow-hidden">
+        {/* Diegetic Sanctuary Background Backdrop */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity filter contrast-125 pointer-events-none"
+          style={{ backgroundImage: `url(${getLocationBackground('bar')})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/95 via-stone-950/85 to-amber-950/75 pointer-events-none" />
+
         {/* Ambient Candlelight Glow */}
         <div className="pointer-events-none absolute -right-12 -top-12 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl" />
 

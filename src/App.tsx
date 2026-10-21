@@ -44,6 +44,7 @@ import { DirectorModeView } from './components/director/DirectorModeView';
 import { getVaultZeroGateStatus } from './engine/keysEngine';
 import { MAP_NODES, MapNode, TRANSIT_LINES } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
+import { getLocationBackground } from './utils/assets';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
@@ -257,7 +258,15 @@ export const App: React.FC = () => {
           />
         </main>
       ) : (
-        <main className="flex-1 p-5 md:p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
+        <main className="flex-1 p-5 md:p-6 overflow-y-auto space-y-6 flex flex-col justify-between relative">
+          {/* Subtle Sector Background Atmosphere Layer */}
+          <div 
+            aria-hidden="true"
+            className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-15 mix-blend-luminosity filter contrast-125 transition-all duration-700"
+            style={{ 
+              backgroundImage: `url(${getLocationBackground(activeTab === 'bar' ? 'bar' : activeLocation)})` 
+            }}
+          />
           {activeTab === 'slate' && (
             <div className="space-y-6">
               {/* Active Sector Header */}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Operative } from '../../types';
 import { Radio, Zap, Volume2 } from 'lucide-react';
 import { BanterLine } from '../../data/companionBanter';
+import { getOperativePortrait } from '../../utils/assets';
 
 interface CompanionBanterBoxProps {
   companion: Operative;
@@ -47,12 +48,25 @@ export const CompanionBanterBox: React.FC<CompanionBanterBoxProps> = ({
 
       {/* Spoken Quote */}
       {banter && (
-        <div className="flex items-start gap-2 pt-0.5">
-          <span className="text-base leading-none select-none opacity-60">"</span>
-          <p className="text-zinc-200 text-xs italic leading-relaxed">
-            {banter.text}
-          </p>
-          <span className="text-base leading-none select-none opacity-60">"</span>
+        <div className="flex items-start gap-3 pt-1">
+          <div className="w-10 h-10 rounded-md border border-current/40 bg-noir-ink shrink-0 overflow-hidden relative shadow">
+            <img
+              src={getOperativePortrait(companion.id)}
+              alt={companion.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center -z-10 text-[9px] text-zinc-500 font-bold">
+              {companion.callsign.slice(0, 2)}
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-zinc-200 text-xs italic leading-relaxed">
+              "{banter.text}"
+            </p>
+          </div>
         </div>
       )}
 

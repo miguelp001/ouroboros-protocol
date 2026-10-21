@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" width="320" height="320">
+    <defs>
+      <radialGradient id="bgGlow-jax_tinker" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="#0a0a0c" stop-opacity="1"/>
+      </radialGradient>
+      <linearGradient id="crtScan-jax_tinker" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="transparent"/>
+        <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.05"/>
+        <stop offset="100%" stop-color="transparent"/>
+      </linearGradient>
+    </defs>
+    <!-- Background Frame -->
+    <rect width="320" height="320" fill="#0a0a0c"/>
+    <rect width="320" height="320" fill="url(#bgGlow-jax_tinker)"/>
+    
+    <!-- Character Artwork -->
+    
+      <!-- Ballistic Apron & Loupe -->
+      <circle cx="160" cy="160" r="140" fill="#0f0f13" stroke="#f59e0b" stroke-width="3" opacity="0.5"/>
+      <rect x="110" y="200" width="100" height="90" rx="8" fill="#1c1917" stroke="#f59e0b" stroke-width="2"/>
+      <!-- Head & Beard -->
+      <circle cx="160" cy="145" r="42" fill="#292524" stroke="#78716c" stroke-width="2"/>
+      <path d="M 130 155 Q 160 205 190 155 Z" fill="#1c1917"/>
+      <!-- Multi-Lens Loupe -->
+      <circle cx="175" cy="135" r="14" fill="#09090b" stroke="#facc15" stroke-width="2"/>
+      <circle cx="175" cy="135" r="6" fill="#facc15" opacity="0.8"/>
+      <line x1="175" y1="121" x2="195" y2="105" stroke="#f59e0b" stroke-width="2"/>
+      <!-- Crossed Hammers/Gears -->
+      <rect x="155" y="225" width="10" height="40" fill="#78716c"/>
+      <rect x="145" y="220" width="30" height="12" fill="#f59e0b"/>
+    
+
+    <!-- Scanline Overlay -->
+    <rect width="320" height="320" fill="url(#crtScan-jax_tinker)" pointer-events="none"/>
+
+    <!-- CRT Corner Brackets -->
+    <path d="M 15 35 L 15 15 L 35 15" fill="none" stroke="#f59e0b" stroke-width="2"/>
+    <path d="M 305 35 L 305 15 L 285 15" fill="none" stroke="#f59e0b" stroke-width="2"/>
+    <path d="M 15 285 L 15 305 L 35 305" fill="none" stroke="#f59e0b" stroke-width="2"/>
+    <path d="M 305 285 L 305 305 L 285 305" fill="none" stroke="#f59e0b" stroke-width="2"/>
+
+    <!-- Callsign Plate -->
+    <rect x="25" y="278" width="270" height="26" rx="4" fill="#09090b" stroke="#27272a" stroke-width="1.5"/>
+    <text x="35" y="295" fill="#f59e0b" font-family="monospace" font-size="11" font-weight="bold" letter-spacing="0.1em">JAX TINKER // "ANVIL"</text>
+    <text x="285" y="295" fill="#71717a" font-family="monospace" font-size="9" text-anchor="end">MASTER WEAPONSMITH</text>
+  </svg>

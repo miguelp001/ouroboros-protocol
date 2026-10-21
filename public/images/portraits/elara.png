@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" width="320" height="320">
+    <defs>
+      <radialGradient id="bgGlow-elara" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#f97316" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="#0a0a0c" stop-opacity="1"/>
+      </radialGradient>
+      <linearGradient id="crtScan-elara" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="transparent"/>
+        <stop offset="50%" stop-color="#f97316" stop-opacity="0.05"/>
+        <stop offset="100%" stop-color="transparent"/>
+      </linearGradient>
+    </defs>
+    <!-- Background Frame -->
+    <rect width="320" height="320" fill="#0a0a0c"/>
+    <rect width="320" height="320" fill="url(#bgGlow-elara)"/>
+    
+    <!-- Character Artwork -->
+    
+      <!-- Blast Suit & Detonator Bandolier -->
+      <circle cx="160" cy="160" r="140" fill="#17100a" stroke="#f97316" stroke-width="3" opacity="0.5"/>
+      <path d="M 90 285 L 130 180 L 190 180 L 230 285 Z" fill="#2d1b0d" stroke="#f97316" stroke-width="2"/>
+      <!-- Detonator Bandolier -->
+      <line x1="95" y1="200" x2="215" y2="280" stroke="#7c2d12" stroke-width="6"/>
+      <circle cx="130" cy="225" r="4" fill="#ef4444"/>
+      <circle cx="155" cy="242" r="4" fill="#facc15"/>
+      <circle cx="180" cy="258" r="4" fill="#ef4444"/>
+      <!-- Head & Blast Goggles -->
+      <circle cx="160" cy="140" r="38" fill="#1c1917"/>
+      <rect x="135" y="128" width="50" height="16" rx="6" fill="#431407" stroke="#f97316" stroke-width="2"/>
+      <circle cx="148" cy="136" r="5" fill="#f97316"/>
+      <circle cx="172" cy="136" r="5" fill="#f97316"/>
+    
+
+    <!-- Scanline Overlay -->
+    <rect width="320" height="320" fill="url(#crtScan-elara)" pointer-events="none"/>
+
+    <!-- CRT Corner Brackets -->
+    <path d="M 15 35 L 15 15 L 35 15" fill="none" stroke="#f97316" stroke-width="2"/>
+    <path d="M 305 35 L 305 15 L 285 15" fill="none" stroke="#f97316" stroke-width="2"/>
+    <path d="M 15 285 L 15 305 L 35 305" fill="none" stroke="#f97316" stroke-width="2"/>
+    <path d="M 305 285 L 305 305 L 285 305" fill="none" stroke="#f97316" stroke-width="2"/>
+
+    <!-- Callsign Plate -->
+    <rect x="25" y="278" width="270" height="26" rx="4" fill="#09090b" stroke="#27272a" stroke-width="1.5"/>
+    <text x="35" y="295" fill="#f97316" font-family="monospace" font-size="11" font-weight="bold" letter-spacing="0.1em">ELARA // "FUSE"</text>
+    <text x="285" y="295" fill="#71717a" font-family="monospace" font-size="9" text-anchor="end">DEMOLITIONIST</text>
+  </svg>

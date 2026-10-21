@@ -35,6 +35,7 @@ export const OperativeSchema = z.object({
   epitaphLedger: z.array(z.string()),
   loyaltyPerk: z.string(),
   recruitmentLocation: z.string().optional(),
+  portraitUrl: z.string().optional(),
 });
 
 export const FactionFrontSchema = z.object({

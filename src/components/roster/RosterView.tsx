@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { OperativeDossierModal } from './OperativeDossierModal';
 import { soundFx } from '../../audio/soundFx';
+import { getOperativePortrait } from '../../utils/assets';
 
 interface RosterViewProps {
   roster: Operative[];
@@ -102,46 +103,64 @@ export const RosterView: React.FC<RosterViewProps> = ({
               `}
             >
               {/* Header: Name, Callsign, Status */}
-              <div className="flex items-center justify-between">
-                <span className={`font-bold ${isDead ? 'line-through text-crisis' : isUnrecruited ? 'text-zinc-400' : 'text-noir-chalk'}`}>
-                  {op.name}
-                </span>
-
-                <div className="flex items-center gap-1.5">
-                  {isCompanion && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-hazard text-noir-ink font-bold flex items-center gap-1">
-                      <UserCheck className="w-2.5 h-2.5" />
-                      ACTIVE
-                    </span>
-                  )}
-                  {isUnrecruited ? (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-500 flex items-center gap-1">
-                      <Lock className="w-2.5 h-2.5" />
-                      LOCKED
-                    </span>
-                  ) : (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-hazard">
-                      {op.callsign}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Role & Vitals Bar */}
-              <div className="flex items-center justify-between text-[11px] text-noir-muted">
-                <span>{op.role}</span>
-                {!isUnrecruited && (
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <Heart className="w-3 h-3 text-red-400" />
-                      {op.hp}/{op.maxHp}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Smile className="w-3 h-3 text-hazard" />
-                      {op.morale}%
-                    </span>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded border border-noir-border bg-noir-ink shrink-0 overflow-hidden relative shadow">
+                  <img
+                    src={getOperativePortrait(op.id)}
+                    alt={op.name}
+                    className={`w-full h-full object-cover ${isDead ? 'grayscale opacity-40' : isUnrecruited ? 'opacity-40 blur-[0.5px]' : ''}`}
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center -z-10 text-[10px] text-zinc-500 font-bold">
+                    {op.callsign.slice(0, 2)}
                   </div>
-                )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className={`font-bold truncate ${isDead ? 'line-through text-crisis' : isUnrecruited ? 'text-zinc-400' : 'text-noir-chalk'}`}>
+                      {op.name}
+                    </span>
+
+                    <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                      {isCompanion && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-hazard text-noir-ink font-bold flex items-center gap-1">
+                          <UserCheck className="w-2.5 h-2.5" />
+                          ACTIVE
+                        </span>
+                      )}
+                      {isUnrecruited ? (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-500 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5" />
+                          LOCKED
+                        </span>
+                      ) : (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-hazard">
+                          {op.callsign}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Role & Vitals Bar */}
+                  <div className="flex items-center justify-between text-[11px] text-noir-muted mt-1">
+                    <span className="truncate">{op.role}</span>
+                    {!isUnrecruited && (
+                      <div className="flex items-center gap-2.5 shrink-0 ml-1">
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-3 h-3 text-red-400" />
+                          {op.hp}/{op.maxHp}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Smile className="w-3 h-3 text-hazard" />
+                          {op.morale}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Recruitment Intel (if unrecruited) */}
