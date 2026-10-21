@@ -233,6 +233,54 @@ class SlateAudioEngine {
     osc.start(now);
     osc.stop(now + 1.8);
   }
+
+  // Resonant Crystal Glass Clink for Taproom Toasts
+  public playGlassClink() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2450, now);
+    osc.frequency.exponentialRampToValueAtTime(2280, now + 0.35);
+
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.35);
+  }
+
+  // Blade Carving into Aged Mahogany Wood
+  public playWoodCarving() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    [0, 0.08, 0.16].forEach((offset) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(260 + offset * 80, now + offset);
+      osc.frequency.exponentialRampToValueAtTime(110, now + offset + 0.07);
+
+      gain.gain.setValueAtTime(0.12, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.07);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.07);
+    });
+  }
 }
 
 export const soundFx = new SlateAudioEngine();

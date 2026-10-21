@@ -32,6 +32,7 @@ import { HostilityMonitor } from './components/hostility/HostilityMonitor';
 import { FactionFrontsMonitor } from './components/factions/FactionFrontsMonitor';
 import { GameOverModal } from './components/modals/GameOverModal';
 import { CatastrophicExtractionModal } from './components/modals/CatastrophicExtractionModal';
+import { WakeTollgateModal } from './components/modals/WakeTollgateModal';
 import { TaproomSeating } from './components/bar/TaproomSeating';
 import { MAP_NODES, MapNode } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
@@ -503,15 +504,20 @@ export const App: React.FC = () => {
                     TAPROOM & WAKES
                   </button>
                   <button
+                    disabled={pendingWakes.length > 0}
                     onClick={() => {
+                      if (pendingWakes.length > 0) return;
                       soundFx.playClick();
                       setBarSubView('safehouse');
                     }}
                     className={`px-3 py-1 rounded transition-colors ${
-                      barSubView === 'safehouse' 
+                      pendingWakes.length > 0
+                        ? 'opacity-30 cursor-not-allowed text-zinc-600 bg-noir-ink'
+                        : barSubView === 'safehouse' 
                         ? 'bg-hazard text-noir-ink font-bold' 
                         : 'text-noir-muted hover:text-noir-chalk'
                     }`}
+                    title={pendingWakes.length > 0 ? 'TOLLGATE LOCKED: Must hold wake vigil before dispatching workstations' : ''}
                   >
                     WORKSTATION DISPATCH
                   </button>
@@ -519,9 +525,13 @@ export const App: React.FC = () => {
 
                 <SlateButton
                   variant="hazard"
-                  onClick={() => restAtBar()}
+                  disabled={pendingWakes.length > 0}
+                  onClick={() => {
+                    if (pendingWakes.length > 0) return;
+                    restAtBar();
+                  }}
                 >
-                  REST & CLEAR FATIGUE
+                  {pendingWakes.length > 0 ? 'TOLLGATE LOCKED (VIGIL)' : 'REST & CLEAR FATIGUE'}
                 </SlateButton>
               </div>
             </div>
@@ -623,6 +633,11 @@ export const App: React.FC = () => {
           reason={storeState.gameOverReason ?? 'SOLO_AGENT_FALLEN'}
           onResetGame={() => storeState.resetGame()}
         />
+      )}
+
+      {/* Wake Tollgate Ceremony Modal */}
+      {activeTab === 'bar' && pendingWakes.length > 0 && (
+        <WakeTollgateModal />
       )}
     </SlateContainer>
   );

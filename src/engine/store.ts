@@ -13,6 +13,7 @@ import {
   executePermanentCompanionDeath, 
   GameOverReason 
 } from './permadeathEngine';
+import { resolveWakeCeremony } from './wakeEngine';
 
 export interface GameEngineStore extends GameEngineState {
   // Time & Shift Actions
@@ -295,25 +296,7 @@ export const useGameStore = create<GameEngineStore>((set, get) => ({
   },
 
   resolveWake: (id, attended) => {
-    set((state) => {
-      const remainingWakes = state.pendingWakes.filter((wakeId) => wakeId !== id);
-      const notches = attended ? state.notchesOnBar + 1 : state.notchesOnBar;
-      const moraleDelta = attended ? 15 : -20;
-
-      const updatedRoster = state.roster.map((op) => {
-        if (op.status !== 'ACTIVE') return op;
-        return {
-          ...op,
-          morale: Math.max(0, Math.min(100, op.morale + moraleDelta)),
-        };
-      });
-
-      return {
-        pendingWakes: remainingWakes,
-        notchesOnBar: notches,
-        roster: updatedRoster,
-      };
-    });
+    resolveWakeCeremony(id, attended);
   },
 
   advanceFactionClocks: () => {
