@@ -231,28 +231,30 @@ export const ThresholdBarView: React.FC<ThresholdBarViewProps> = ({
         </div>
 
         {/* Dialogue Prompts & House Special Button */}
-        <div className="flex flex-wrap gap-2">
-          {BARTENDER_TOPICS.map((topic) => (
+        <div className="flex flex-wrap items-center gap-2.5">
+          {BARTENDER_TOPICS.map((topic, idx) => (
             <button
               key={topic.id}
               onClick={() => handleSelectTopic(topic.id)}
-              className={`px-3 py-1.5 rounded border text-[11px] font-bold transition-colors ${
+              className={`px-3.5 py-2 rounded font-mono text-xs font-black transition-all ${
                 activeTopic === topic.id
-                  ? 'border-amber-400 bg-amber-500 text-stone-950'
-                  : 'border-amber-900/70 bg-stone-950 text-amber-200 hover:border-amber-500'
+                  ? 'action-brush-primary shadow-[0_0_16px_rgba(245,158,11,0.5)] transform -rotate-[0.5deg]'
+                  : idx === 0 && !activeTopic
+                  ? 'action-brush-primary hover:scale-105 transform -rotate-[0.5deg]'
+                  : 'action-card-secondary hover:border-amber-400'
               }`}
             >
-              {topic.title}
+              {idx === 0 && !activeTopic ? `(( TAKE THE STOOL // DEBRIEF ))` : topic.title}
             </button>
           ))}
 
           <button
             onClick={handleOrderWhiskey}
-            className="px-3 py-1.5 rounded border border-amber-500 bg-amber-900/40 hover:bg-amber-600 hover:text-stone-950 text-amber-100 font-bold text-[11px] transition-colors flex items-center gap-1.5 shadow-sm"
+            className="action-card-secondary px-3.5 py-2 rounded text-xs font-bold transition-all flex items-center gap-1.5 hover:scale-105"
             title="Cost: 20 Chip Creds. Restores Agent 0 to full HP and boosts companion Morale +10."
           >
             <Wine className="h-3.5 w-3.5 text-amber-400" />
-            ORDER HOUSE RYE (-20C)
+            [ ORDER HOUSE RYE // -20C ]
           </button>
         </div>
 

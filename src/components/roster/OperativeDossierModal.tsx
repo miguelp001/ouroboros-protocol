@@ -52,7 +52,7 @@ export const OperativeDossierModal: React.FC<OperativeDossierModalProps> = ({
               <img
                 src={getOperativePortrait(operative.id)}
                 alt={operative.name}
-                className={`w-full h-full object-cover ${isDead ? 'grayscale opacity-40' : isUnrecruited ? 'opacity-40 blur-[0.5px]' : ''}`}
+                className={`w-full h-full object-cover filter grayscale contrast-125 ${isDead ? 'opacity-30' : ''}`}
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';
                 }}

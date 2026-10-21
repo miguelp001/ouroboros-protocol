@@ -233,7 +233,7 @@ export const App: React.FC = () => {
       <SlateTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        activeRosterCount={roster.filter(r => r.status === 'ACTIVE').length}
+        activeRosterCount={roster.filter(r => r.status !== 'UNRECRUITED').length}
         notchesOnBar={notchesOnBar}
         hasPendingWakes={pendingWakes.length > 0}
         isInterrupt={isInterrupt}
@@ -271,20 +271,22 @@ export const App: React.FC = () => {
         <main className="flex-1 p-5 md:p-6 overflow-y-auto space-y-6 flex flex-col justify-between relative z-10">
           {activeTab === 'slate' && (
             <div className="space-y-6">
-              {/* Active Sector Header */}
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-noir-border pb-3">
-                <div>
-                  <div className="text-[10px] text-hazard tracking-widest uppercase font-mono">LOCATION NODE: {activeLocation}</div>
-                  <h2 className="text-xl font-bold tracking-tight text-noir-chalk font-mono">
+              {/* Active Sector Header - Graphic Novel Tape Badges */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="tape-badge-white px-3 py-1 text-xs tracking-wider">
                     {isInterrupt 
-                      ? 'EMERGENCY PERIMETER LOCKDOWN' 
+                      ? 'CRITICAL PERIMETER LOCKDOWN' 
                       : (() => {
                           const node = MAP_NODES[activeLocation];
                           if (!node) return activeLocation;
                           const line = node.lines?.[0] ? TRANSIT_LINES[node.lines[0]] : null;
                           return `${line ? line.name.toUpperCase() : node.sector.toUpperCase()} // ${node.name.toUpperCase()}`;
                         })()}
-                  </h2>
+                  </div>
+                  <div className="tape-badge-black px-2.5 py-1 text-xs tracking-wider">
+                    CURRENT SHIFT // <span className="text-amber-400 font-extrabold">{time.shift}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {gateStatus.allUnlocked && (

@@ -53,7 +53,7 @@ export const CompanionBanterBox: React.FC<CompanionBanterBoxProps> = ({
             <img
               src={getOperativePortrait(companion.id)}
               alt={companion.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover filter grayscale contrast-125"
               onError={(e) => {
                 (e.target as HTMLElement).style.display = 'none';
               }}

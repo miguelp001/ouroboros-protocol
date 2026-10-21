@@ -23,9 +23,15 @@ export const SlateScanlines: React.FC<SlateScanlinesProps> = ({ showFracture = t
       {showFracture && (
         <div 
           aria-hidden="true"
-          className="absolute inset-0 glass-fracture z-40 pointer-events-none opacity-30" 
+          className="absolute inset-0 glass-fracture z-40 pointer-events-none opacity-40" 
         />
       )}
+
+      {/* Heavy Sin City 35mm Gritty Film Grain */}
+      <div 
+        aria-hidden="true"
+        className="film-grain film-grain-animated" 
+      />
 
       {/* CRT Horizontal Phosphor Scan Beam */}
       <div 

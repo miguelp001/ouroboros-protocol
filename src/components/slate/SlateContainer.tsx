@@ -38,7 +38,7 @@ export const SlateContainer: React.FC<SlateContainerProps> = ({
       {backgroundImage && (
         <div 
           aria-hidden="true"
-          className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-45 filter blur-[1.5px] scale-105 transition-all duration-700 ease-in-out" 
+          className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-55 filter blur-[0.8px] scale-105 transition-all duration-700 ease-in-out" 
           style={{ backgroundImage: `url(${backgroundImage})` }}
         />
       )}
@@ -46,7 +46,7 @@ export const SlateContainer: React.FC<SlateContainerProps> = ({
       {/* Dark Vignette Overlay over ambient environment */}
       <div 
         aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(10,10,12,0.6)_0%,_#0a0a0c_90%)] pointer-events-none" 
+        className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.35)_0%,_#050507_90%)] pointer-events-none" 
       />
 
       {/* Diegetic 3D Slate Perspective Container */}

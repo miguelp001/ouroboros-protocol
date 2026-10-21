@@ -83,12 +83,13 @@ export const StoryletCard: React.FC<StoryletCardProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-2.5">
-          {storylet.branches.map((branch) => {
+        <div className="grid grid-cols-1 gap-3">
+          {storylet.branches.map((branch, index) => {
             const odds = getOddsForBranch(branch);
             const isStatCheck = !!branch.statCheck;
             const statKey = branch.statCheck?.stat;
             const statValue = statKey ? agentStats[statKey] : 0;
+            const isPrimary = index === 0;
 
             return (
               <button
@@ -96,35 +97,37 @@ export const StoryletCard: React.FC<StoryletCardProps> = ({
                 onClick={() => onSelectBranch(branch)}
                 disabled={isRolling}
                 className={`
-                  group text-left p-3.5 rounded border transition-all text-xs
+                  group text-left p-3.5 rounded transition-all text-xs font-mono
                   ${isInterrupt 
-                    ? 'border-crisis/60 bg-noir-surface hover:border-crisis hover:bg-crisis/20' 
-                    : 'border-noir-border bg-noir-surface hover:border-hazard hover:bg-noir-elevated'}
+                    ? 'border-2 border-crisis bg-black text-crisis hover:bg-crisis/20' 
+                    : isPrimary
+                    ? 'action-brush-primary transform -rotate-[0.5deg] hover:scale-[1.01]'
+                    : 'action-card-secondary hover:scale-[1.005]'}
                   disabled:opacity-50 disabled:cursor-not-allowed
                 `}
               >
-                <div className="flex items-center justify-between font-bold">
-                  <span className={`text-sm ${isInterrupt ? 'text-crisis group-hover:text-white' : 'text-noir-chalk group-hover:text-hazard'}`}>
+                <div className="flex items-center justify-between font-black">
+                  <span className={`text-sm tracking-wide ${isInterrupt ? 'text-crisis' : isPrimary ? 'text-black font-black' : 'text-amber-300'}`}>
                     {isStatCheck 
-                      ? `[${statKey?.toUpperCase()} ${statValue >= 0 ? `+${statValue}` : statValue}] ${branch.label}`
-                      : branch.label}
+                      ? `[${statKey?.toUpperCase()} ${statValue >= 0 ? `+${statValue}` : statValue}] ${isPrimary ? `(( ${branch.label} ))` : `[ ${branch.label} ]`}`
+                      : isPrimary ? `(( ${branch.label} ))` : `[ ${branch.label} ]`}
                   </span>
                   {isStatCheck ? (
-                    <Dices className="w-4 h-4 text-hazard opacity-70 group-hover:opacity-100 ml-2 shrink-0" />
+                    <Dices className={`w-4 h-4 ml-2 shrink-0 ${isInterrupt ? 'text-crisis' : isPrimary ? 'text-black' : 'text-amber-400'}`} />
                   ) : (
-                    <ArrowRight className="w-4 h-4 text-hazard opacity-70 group-hover:opacity-100 ml-2 shrink-0" />
+                    <ArrowRight className={`w-4 h-4 ml-2 shrink-0 ${isInterrupt ? 'text-crisis' : isPrimary ? 'text-black' : 'text-amber-400'}`} />
                   )}
                 </div>
 
-                <p className="text-[11px] text-noir-muted mt-1">
+                <p className={`text-[11px] mt-1.5 ${isPrimary ? 'text-zinc-900 font-semibold' : 'text-zinc-400'}`}>
                   {branch.description}
                 </p>
 
                 {odds && (
-                  <div className="text-[10px] text-zinc-500 font-mono mt-2 flex gap-3 border-t border-noir-border/40 pt-1.5">
-                    <span className="text-emerald-400/90 font-medium">Clean Hit: {odds.cleanHitPct}%</span>
-                    <span className="text-hazard/90 font-medium">Costly: {odds.costlyAdvancePct}%</span>
-                    <span className="text-crisis/90 font-medium">Miss: {odds.missPct}%</span>
+                  <div className={`text-[10px] font-mono mt-2 flex gap-3 border-t pt-1.5 ${isPrimary ? 'border-black/20 text-zinc-900 font-semibold' : 'border-zinc-800 text-zinc-400'}`}>
+                    <span>Clean Hit: {odds.cleanHitPct}%</span>
+                    <span>Costly: {odds.costlyAdvancePct}%</span>
+                    <span>Miss: {odds.missPct}%</span>
                   </div>
                 )}
               </button>
