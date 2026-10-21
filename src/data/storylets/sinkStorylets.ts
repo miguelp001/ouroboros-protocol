@@ -1,6 +1,7 @@
 import { Storylet } from '../../engine/qbn/types';
 
 export const SINK_STORYLETS: Storylet[] = [
+  // --- NODE S-01 (PONTOON JUNCTION) ---
   {
     id: 's01_shifting_hound',
     title: 'THE SHIFTING HOUND // INTAKE PERIMETER',
@@ -85,6 +86,7 @@ export const SINK_STORYLETS: Storylet[] = [
       nodeId: 'S-01',
       qualities: {
         s01_hound_neutralized: true,
+        s01_barge_salvaged: false,
       },
     },
     branches: [
@@ -174,6 +176,201 @@ export const SINK_STORYLETS: Storylet[] = [
       },
     ],
   },
+
+  // --- NODE S-02 (THE DROWNED DEPOT) ---
+  {
+    id: 's02_cora_infiltrator_lead',
+    title: 'THE SHADOW IN THE VENTILATION DUCTS',
+    sector: 'sink',
+    nodeId: 'S-02',
+    priority: 9,
+    narrative: `Above the flooded railway platforms of the Drowned Depot, grease-stained vents rattle rhythmically. A light flashes twice—an emergency optical cipher. Cora Ramos ('SHADOWSTEP') has been trapped behind a Drowned Covenant cordon for three days.`,
+    requirements: {
+      nodeId: 'S-02',
+      qualities: {
+        cora_recruited: false,
+      },
+    },
+    branches: [
+      {
+        id: 'branch_stealth_extraction',
+        label: 'Jam covenant perimeter sensors and guide Cora down',
+        description: 'Cover check to disable the acoustic surveillance web.',
+        statCheck: { stat: 'cover' },
+        outcomes: {
+          cleanHit: {
+            narrative: 'You silence the perimeter hydrophones. Cora drops from the grate like a cat, wiping brine from her goggles: "About damn time, Agent 0. I’ve mapped every vent between here and the Heights."',
+            mutations: {
+              recruitOperative: 'cora_ramos',
+              setQualities: { cora_recruited: true },
+              modifyCred: { digitalCred: 30 },
+            },
+          },
+          costlyAdvance: {
+            narrative: 'Cora makes the drop safely, but a falling steel louvre alerts a Drowned Covenant patrol.',
+            mutations: {
+              recruitOperative: 'cora_ramos',
+              setQualities: { cora_recruited: true },
+              modifyHeat: { sector: 'sink', delta: 1 },
+            },
+          },
+          miss: {
+            narrative: 'You trip an acoustic tripwire! Covenant sentries open fire with pneumatic harpoon rifles, grazing your thigh as Cora retreats deeper into the duct.',
+            mutations: {
+              modifyAgentHp: -3,
+              modifyHeat: { sector: 'sink', delta: 2 },
+            },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 's02_covenant_ferryman_tithe',
+    title: 'THE DROWNED COVENANT WATER-TITHE',
+    sector: 'sink',
+    nodeId: 'S-02',
+    priority: 6,
+    narrative: `A flat-bottomed iron skiff cuts through the dark water. Three Drowned Covenant zealots clad in diver rubber and bleached coral masks block the flooded rail spur. They demand 25 Chip Creds in tithe, or a display of sacred submerged endurance.`,
+    requirements: {
+      nodeId: 'S-02',
+    },
+    branches: [
+      {
+        id: 'branch_pay_tithe',
+        label: 'Pay the 25 Chip Cred water tithe',
+        description: 'Safe passage without risking injury or alerting faction patrols.',
+        directOutcome: {
+          narrative: 'The lead zealot dips a gloved finger into the brine and taps your forehead in blessing: "The water forgives what the dry earth covets. Pass freely."',
+          mutations: {
+            modifyCred: { chipCred: -25 },
+            modifyHeat: { sector: 'sink', delta: -1 },
+          },
+        },
+      },
+      {
+        id: 'branch_intimidate_ferryman',
+        label: 'Smash the lead zealot’s harpoon and commandeer the crossing',
+        description: 'Brutal physical confrontation to assert territory.',
+        statCheck: { stat: 'scrap' },
+        outcomes: {
+          cleanHit: {
+            narrative: 'You break the lead zealot’s staff across your knee and shove their skiff aside. The zealots scatter into the murky channels, leaving behind stolen salvage.',
+            mutations: {
+              modifyCred: { chipCred: 30, digitalCred: 15 },
+            },
+          },
+          costlyAdvance: {
+            narrative: 'You force your way past, but a jagged harpoon tip catches your arm in the struggle.',
+            mutations: {
+              modifyAgentHp: -2,
+              modifyCred: { chipCred: 15 },
+              modifyHeat: { sector: 'sink', delta: 1 },
+            },
+          },
+          miss: {
+            narrative: 'The zealots overwhelm you with weighted throwing nets, dragging you under the contaminated water before you cut yourself free.',
+            mutations: {
+              modifyAgentHp: -4,
+              modifyHeat: { sector: 'sink', delta: 2 },
+            },
+          },
+        },
+      },
+    ],
+  },
+
+  // --- NODE S-03 (COASTAL REFINERY) ---
+  {
+    id: 's03_submerged_altar_tether',
+    title: 'THE SUNKEN SANCTUM OF THE BRINE',
+    sector: 'sink',
+    nodeId: 'S-03',
+    priority: 7,
+    narrative: `Beneath the rusted storage tanks of the coastal refinery lies a submerged stone archway glowing with bioluminescent anomaly algae. The air hums with psychic resonance—the water surface does not ripple even when struck.`,
+    requirements: {
+      nodeId: 'S-03',
+    },
+    branches: [
+      {
+        id: 'branch_commune_altar',
+        label: 'Attune consciousness to the anomaly frequency',
+        description: 'Tether roll to extract pristine reality residue.',
+        statCheck: { stat: 'tether' },
+        outcomes: {
+          cleanHit: {
+            narrative: 'You breathe through the psychic dissonance. The anomalous frequency harmonizes, crystallizing into a dense cobalt anomaly core sample.',
+            mutations: {
+              modifyCred: { digitalCred: 50 },
+              setQualities: { s03_altar_purified: true },
+            },
+          },
+          costlyAdvance: {
+            narrative: 'You secure the residue sample, but intense acoustic hallucinations leave your temples pounding with migraine agony.',
+            mutations: {
+              modifyAgentHp: -1,
+              modifyCred: { digitalCred: 30 },
+              setQualities: { s03_altar_purified: true },
+            },
+          },
+          miss: {
+            narrative: 'The reality tear pushes back! Spatial feedback ruptures your slate’s audio telemetry, staggering you into the brine.',
+            mutations: {
+              modifyAgentHp: -3,
+            },
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 's03_brine_filtration_sabotage',
+    title: 'SABOTAGE // BRINE DESALINATION RIGS',
+    sector: 'sink',
+    nodeId: 'S-03',
+    priority: 8,
+    narrative: `The Drowned Covenant operates three massive brine evaporator towers here, purifying stolen electrolytes to fuel their Stage 2 Front. A single well-placed thermite charge or logic bomb in the main condenser valve could collapse their distillation network.`,
+    requirements: {
+      nodeId: 'S-03',
+      qualities: {
+        s03_filtration_sabotaged: false,
+      },
+    },
+    branches: [
+      {
+        id: 'branch_sabotage_condenser',
+        label: 'Overload the high-pressure pneumatic evaporator',
+        description: 'Reckon check to reverse turbine flow without catastrophic containment breach.',
+        statCheck: { stat: 'reckon' },
+        outcomes: {
+          cleanHit: {
+            narrative: 'Turbines scream in reverse. Superheated brine vents into the sea, shattering the Covenant’s regional water monopoly and stalling their front.',
+            mutations: {
+              setQualities: { s03_filtration_sabotaged: true },
+              modifyCred: { digitalCred: 40 },
+            },
+          },
+          costlyAdvance: {
+            narrative: 'The evaporator blows out with a thunderous roar. The front is disrupted, but scalding steam singes your shoulder.',
+            mutations: {
+              setQualities: { s03_filtration_sabotaged: true },
+              modifyAgentHp: -2,
+              modifyHeat: { sector: 'sink', delta: 1 },
+            },
+          },
+          miss: {
+            narrative: 'The override fails! High-voltage emergency safeties discharge directly through your data probe.',
+            mutations: {
+              modifyAgentHp: -3,
+              modifyHeat: { sector: 'sink', delta: 2 },
+            },
+          },
+        },
+      },
+    ],
+  },
+
+  // --- INTERRUPT CRISIS ---
   {
     id: 's01_rippers_ambush',
     title: 'INTERRUPT // THE RIPPERS CORNER YOU',

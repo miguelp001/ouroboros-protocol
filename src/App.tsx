@@ -15,7 +15,7 @@ import { StoryletCard } from './components/storylet/StoryletCard';
 import { soundFx } from './audio/soundFx';
 import { ambientAudioEngine, AmbientSector } from './audio/ambientAudioEngine';
 import { executePbtARoll, DetailedRollResult } from './engine/pbta';
-import { SINK_STORYLETS } from './data/storylets/sinkStorylets';
+import { ALL_STORYLETS } from './data/storylets';
 import { filterActiveStoryletDeck, executeStateMutations } from './engine/qbn/evaluator';
 import { StoryletBranch, Storylet } from './engine/qbn/types';
 import { handleMissInterruptTrigger, resolveInterruptCrisis } from './engine/interruptEngine';
@@ -93,8 +93,8 @@ export const App: React.FC = () => {
     if (isInterrupt && activeInterruptStorylet) {
       return [activeInterruptStorylet];
     }
-    return filterActiveStoryletDeck(SINK_STORYLETS, storeState);
-  }, [storeState, SINK_STORYLETS, isInterrupt, activeInterruptStorylet]);
+    return filterActiveStoryletDeck(ALL_STORYLETS, storeState);
+  }, [storeState, isInterrupt, activeInterruptStorylet]);
 
   const activeStorylet = activeDeck[selectedCardIndex] ?? activeDeck[0];
 
