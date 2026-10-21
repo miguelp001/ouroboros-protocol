@@ -7,6 +7,7 @@ import {
   Operative
 } from '../types';
 import { INITIAL_GAME_STATE } from './initialState';
+import { advanceAllFactionClocks } from './factionEngine';
 
 export interface GameEngineStore extends GameEngineState {
   // Time & Shift Actions
@@ -371,51 +372,14 @@ export const useGameStore = create<GameEngineStore>((set, get) => ({
   },
 
   advanceFactionClocks: () => {
-    const state = get();
+    const report = advanceAllFactionClocks();
     const results: Record<string, { roll: number; advancedSegments: number }> = {};
-    const updatedFactions = { ...state.factions };
-
-    // Sectors heat mapping
-    const sectorHeat = state.economy.heat;
-
-    Object.entries(updatedFactions).forEach(([factionId, faction]) => {
-      // 2d6 roll
-      const d1 = Math.floor(Math.random() * 6) + 1;
-      const d2 = Math.floor(Math.random() * 6) + 1;
-
-      // Primary stat test for faction is FORCE or ZEAL
-      const statBonus = Math.max(faction.stats.force, faction.stats.zeal);
-
-      // Heat throttle: high average heat grants advantage (+1), low heat gives penalty (-1)
-      const avgHeat = Object.values(sectorHeat).reduce((a, b) => a + b, 0) / Object.values(sectorHeat).length;
-      const heatModifier = avgHeat >= 3 ? 1 : avgHeat <= 1 ? -1 : 0;
-
-      const totalRoll = d1 + d2 + statBonus + heatModifier;
-      let segments = 0;
-
-      if (totalRoll >= 10) {
-        segments = 2; // Clean Hit
-      } else if (totalRoll >= 7) {
-        segments = 1; // Costly Advance
-      } else {
-        segments = 0; // Setback
-      }
-
-      results[factionId] = { roll: totalRoll, advancedSegments: segments };
-
-      // Advance active fronts
-      const nextFronts = faction.activeFronts.map((front) => ({
-        ...front,
-        progress: Math.min(front.max, front.progress + segments),
-      }));
-
-      updatedFactions[factionId] = {
-        ...faction,
-        activeFronts: nextFronts,
+    for (const evt of report.events) {
+      results[evt.factionId] = {
+        roll: evt.roll.total,
+        advancedSegments: evt.advancedSegments,
       };
-    });
-
-    set({ factions: updatedFactions });
+    }
     return results;
   },
 

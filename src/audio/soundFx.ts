@@ -145,6 +145,31 @@ class SlateAudioEngine {
     finalOsc.start(now + 0.22);
     finalOsc.stop(now + 0.35);
   }
+
+  // Warning Siren / Klaxon Pulse when a Faction Front or Crisis triggers
+  public playWarningAlarm() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    [0, 0.22].forEach((offset) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(420, now + offset);
+      osc.frequency.exponentialRampToValueAtTime(260, now + offset + 0.18);
+
+      gain.gain.setValueAtTime(0.2, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.18);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.18);
+    });
+  }
 }
 
 export const soundFx = new SlateAudioEngine();

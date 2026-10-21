@@ -29,13 +29,14 @@ import { evaluateCompanionSynergy, applyMissionMoraleShift } from './engine/syne
 import { VignelliMap } from './components/map/VignelliMap';
 import { NodeTelemetryCard } from './components/map/NodeTelemetryCard';
 import { HostilityMonitor } from './components/hostility/HostilityMonitor';
+import { FactionFrontsMonitor } from './components/factions/FactionFrontsMonitor';
 import { MAP_NODES, MapNode } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
   const [barSubView, setBarSubView] = useState<'taproom' | 'safehouse'>('taproom');
-  const [mapSubView, setMapSubView] = useState<'vignelli' | 'hostility'>('vignelli');
+  const [mapSubView, setMapSubView] = useState<'vignelli' | 'hostility' | 'fronts'>('vignelli');
   const [currentRoll, setCurrentRoll] = useState<DetailedRollResult | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [requestHelpOut, setRequestHelpOut] = useState(true);
@@ -222,9 +223,27 @@ export const App: React.FC = () => {
               day={time.day}
               isFatigued={time.fatigued}
               isInterrupt={isInterrupt}
-              onAdvanceShift={() => executeShiftAdvance({ isRestingAtBar: false })}
+              onAdvanceShift={() => {
+                const rep = executeShiftAdvance({ isRestingAtBar: false });
+                if (rep.factionEvents && rep.factionEvents.length > 0) {
+                  const advances = rep.factionEvents.filter(e => e.advancedSegments > 0);
+                  if (advances.length > 0) {
+                    setLastBranchNarrative(
+                      `[DAWN FACTION RECON] Enemy movements recorded: ${advances.map(a => `${a.factionName} (+${a.advancedSegments})`).join(', ')}.`
+                    );
+                  }
+                }
+              }}
               onRestAtBar={() => {
-                executeShiftAdvance({ isRestingAtBar: true });
+                const rep = executeShiftAdvance({ isRestingAtBar: true });
+                if (rep.factionEvents && rep.factionEvents.length > 0) {
+                  const advances = rep.factionEvents.filter(e => e.advancedSegments > 0);
+                  if (advances.length > 0) {
+                    setLastBranchNarrative(
+                      `[DAWN RECON OVERVIEW] While resting at the Threshold Bar: ${advances.map(a => `${a.factionName} (+${a.advancedSegments})`).join(', ')}.`
+                    );
+                  }
+                }
                 setActiveTab('bar');
               }}
             />
@@ -333,9 +352,19 @@ export const App: React.FC = () => {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-noir-border pb-3">
               <div>
                 <h3 className="font-bold text-base text-noir-chalk font-mono">
-                  {mapSubView === 'vignelli' ? 'VIGNELLI TRANSIT SCHEMATIC' : 'REGIONAL HOSTILITY & PATROL MONITOR'}
+                  {mapSubView === 'vignelli' 
+                    ? 'VIGNELLI TRANSIT SCHEMATIC' 
+                    : mapSubView === 'hostility' 
+                    ? 'REGIONAL HOSTILITY & PATROL MONITOR'
+                    : 'FACTION AGENDAS // PbtA FRONT CLOCKS'}
                 </h3>
-                <p className="text-xs text-noir-muted">Sub-surface transit lines and regional anomaly clusters.</p>
+                <p className="text-xs text-noir-muted">
+                  {mapSubView === 'vignelli'
+                    ? 'Sub-surface transit lines and regional anomaly clusters.'
+                    : mapSubView === 'hostility'
+                    ? 'Heat levels, suspicion thresholds, and Kill Squad telemetry.'
+                    : '6-segment objective clocks evaluated daily at DAWN.'}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex rounded border border-noir-border bg-noir-surface p-0.5 text-xs font-mono">
@@ -365,6 +394,19 @@ export const App: React.FC = () => {
                   >
                     HEAT & SUSPICION
                   </button>
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setMapSubView('fronts');
+                    }}
+                    className={`px-3 py-1 rounded transition-colors ${
+                      mapSubView === 'fronts' 
+                        ? 'bg-hazard text-noir-ink font-bold' 
+                        : 'text-noir-muted hover:text-noir-chalk'
+                    }`}
+                  >
+                    FACTION FRONTS
+                  </button>
                 </div>
               </div>
             </div>
@@ -393,13 +435,20 @@ export const App: React.FC = () => {
                   }}
                 />
               </>
-            ) : (
+            ) : mapSubView === 'hostility' ? (
               <HostilityMonitor
                 heatMap={storeState.economy.heat}
                 factions={storeState.factions}
                 chipCred={storeState.economy.chipCred}
                 digitalCred={storeState.economy.digitalCred}
                 activeCompanionId={storeState.activeCompanionId}
+              />
+            ) : (
+              <FactionFrontsMonitor
+                factions={storeState.factions}
+                heatMap={storeState.economy.heat}
+                chipCred={storeState.economy.chipCred}
+                digitalCred={storeState.economy.digitalCred}
               />
             )}
           </div>

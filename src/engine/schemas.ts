@@ -42,6 +42,11 @@ export const FactionFrontSchema = z.object({
   name: z.string(),
   progress: z.number().int().min(0),
   max: z.number().int().positive(),
+  description: z.string().optional(),
+  targetSector: z.string().optional(),
+  consequenceText: z.string().optional(),
+  completed: z.boolean().optional(),
+  stage: z.number().int().optional(),
 });
 
 export const FactionStatsSchema = z.object({
@@ -57,6 +62,8 @@ export const FactionSchema = z.object({
   stats: FactionStatsSchema,
   activeFronts: z.array(FactionFrontSchema),
   suspicionLevel: z.number().int().min(0).max(4),
+  territorySector: z.string().optional(),
+  primaryStats: z.array(z.enum(['force', 'cognition', 'guile', 'zeal'])).optional(),
 });
 
 export const ShiftSchema = z.enum(['DAWN', 'DUSK', 'NIGHT']);
