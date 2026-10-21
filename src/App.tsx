@@ -23,6 +23,8 @@ import { SINK_STORYLETS } from './data/storylets/sinkStorylets';
 import { filterActiveStoryletDeck, executeStateMutations } from './engine/qbn/evaluator';
 import { StoryletBranch, Storylet } from './engine/qbn/types';
 import { handleMissInterruptTrigger, resolveInterruptCrisis } from './engine/interruptEngine';
+import { ShiftDial } from './components/slate/ShiftDial';
+import { executeShiftAdvance } from './engine/shifts';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
@@ -45,7 +47,6 @@ export const App: React.FC = () => {
   const activeInterruptStorylet = storeState.activeInterruptStorylet as unknown as Storylet | null;
 
   // Store actions
-  const advanceShift = storeState.advanceShift;
   const restAtBar = storeState.restAtBar;
   const resolveWake = storeState.resolveWake;
 
@@ -154,15 +155,6 @@ export const App: React.FC = () => {
                 </h2>
               </div>
               <div className="flex items-center gap-2">
-                {!isInterrupt && (
-                  <SlateButton
-                    variant="neutral"
-                    onClick={() => advanceShift(false)}
-                    className="text-xs"
-                  >
-                    ADVANCE SHIFT
-                  </SlateButton>
-                )}
                 <span className={`px-2.5 py-1 text-[11px] font-bold rounded font-mono border flex items-center gap-1.5 ${
                   isInterrupt 
                     ? 'border-crisis bg-crisis/20 text-crisis animate-pulse' 
@@ -179,6 +171,19 @@ export const App: React.FC = () => {
                 </span>
               </div>
             </div>
+
+            {/* Action Economy Shift Dial (Dawn / Dusk / Night) */}
+            <ShiftDial
+              currentShift={time.shift}
+              day={time.day}
+              isFatigued={time.fatigued}
+              isInterrupt={isInterrupt}
+              onAdvanceShift={() => executeShiftAdvance({ isRestingAtBar: false })}
+              onRestAtBar={() => {
+                executeShiftAdvance({ isRestingAtBar: true });
+                setActiveTab('bar');
+              }}
+            />
 
             {/* Companion Deploy bar & Help Out toggle */}
             <div className="p-2.5 rounded border border-noir-border bg-noir-surface/60 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
