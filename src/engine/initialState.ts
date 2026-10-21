@@ -337,6 +337,7 @@ export const INITIAL_NODE_ANOMALIES: Record<string, NodeAnomaly> = {
   'X-02': { nodeId: 'X-02', tier: 4, entityName: 'Tier 4 Pale Shapeshifter', isMobile: true, contained: false },
   'X-03': { nodeId: 'X-03', tier: 5, entityName: 'Tier 5 Reality Tear', isMobile: false, contained: false },
   'THE_BAR': { nodeId: 'THE_BAR', tier: 0, entityName: 'Sanctuary Reality Anchor', isMobile: false, contained: true },
+  'THRESHOLD_BAR': { nodeId: 'THRESHOLD_BAR', tier: 0, entityName: 'Sanctuary Reality Anchor', isMobile: false, contained: true },
 };
 
 export const INITIAL_GAME_STATE: GameEngineState = {

@@ -42,7 +42,7 @@ import { PrologueView } from './components/prologue/PrologueView';
 import { VaultZeroEndgameView } from './components/endgame/VaultZeroEndgameView';
 import { DirectorModeView } from './components/director/DirectorModeView';
 import { getVaultZeroGateStatus } from './engine/keysEngine';
-import { MAP_NODES, MapNode } from './data/transitMapData';
+import { MAP_NODES, MapNode, TRANSIT_LINES } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
 
 export const App: React.FC = () => {
@@ -96,6 +96,15 @@ export const App: React.FC = () => {
     ambientAudioEngine.setSector(targetSector, 1.0);
   }, [activeTab, activeLocation]);
 
+  // Synchronize selected map node and card index on location changes
+  useEffect(() => {
+    if (MAP_NODES[activeLocation]) {
+      setSelectedMapNode(MAP_NODES[activeLocation]);
+    }
+    setSelectedCardIndex(0);
+    setLastBranchNarrative(null);
+  }, [activeLocation]);
+
   // Dynamically compute active QBN deck for current node and world qualities
   const activeDeck = useMemo(() => {
     if (isInterrupt && activeInterruptStorylet) {
@@ -110,6 +119,9 @@ export const App: React.FC = () => {
     // 1. Direct outcome (no dice roll needed)
     if (branch.directOutcome) {
       soundFx.playClick();
+      setCurrentRoll(null);
+      setCompanionBanter(null);
+      setActivePerkTrigger(null);
       setLastBranchNarrative(branch.directOutcome.narrative);
 
       if (isInterrupt) {
@@ -253,7 +265,14 @@ export const App: React.FC = () => {
                 <div>
                   <div className="text-[10px] text-hazard tracking-widest uppercase font-mono">LOCATION NODE: {activeLocation}</div>
                   <h2 className="text-xl font-bold tracking-tight text-noir-chalk font-mono">
-                    {isInterrupt ? 'EMERGENCY PERIMETER LOCKDOWN' : 'THE SUBMERGED SPUR // PONTOON JUNCTION'}
+                    {isInterrupt 
+                      ? 'EMERGENCY PERIMETER LOCKDOWN' 
+                      : (() => {
+                          const node = MAP_NODES[activeLocation];
+                          if (!node) return activeLocation;
+                          const line = node.lines?.[0] ? TRANSIT_LINES[node.lines[0]] : null;
+                          return `${line ? line.name.toUpperCase() : node.sector.toUpperCase()} // ${node.name.toUpperCase()}`;
+                        })()}
                   </h2>
                 </div>
                 <div className="flex items-center gap-2">

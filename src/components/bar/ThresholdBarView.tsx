@@ -21,6 +21,7 @@ import {
   getBartenderFactionIntel, 
   exitThresholdBarToField 
 } from '../../engine/sanctuaryEngine';
+import { MAP_NODES } from '../../data/transitMapData';
 
 interface ThresholdBarViewProps {
   onDeployToField?: (nodeId: string) => void;
@@ -282,7 +283,15 @@ export const ThresholdBarView: React.FC<ThresholdBarViewProps> = ({
           className="py-2.5 px-4 rounded font-bold text-xs uppercase tracking-wider bg-amber-600 hover:bg-amber-500 text-stone-950 flex items-center gap-2 transition-all shadow-md shadow-amber-950/50"
         >
           <Key className="h-3.5 w-3.5" />
-          <span>STEP THROUGH TO {store.activeLocation === 'THRESHOLD_BAR' ? 'PONTOON JUNCTION (S-01)' : store.activeLocation}</span>
+          <span>
+            STEP THROUGH TO {
+              store.activeLocation === 'THRESHOLD_BAR' 
+                ? 'PONTOON JUNCTION (S-01)' 
+                : (MAP_NODES[store.activeLocation]?.name 
+                    ? `${MAP_NODES[store.activeLocation].name.toUpperCase()} (${store.activeLocation})`
+                    : store.activeLocation)
+            }
+          </span>
         </button>
       </div>
     </div>
