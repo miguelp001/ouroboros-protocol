@@ -5,7 +5,8 @@ import {
   Layers,
   ChevronRight,
   ShieldAlert,
-  Key
+  Key,
+  Sliders
 } from 'lucide-react';
 import { useGameStore } from './engine/store';
 import { SlateContainer } from './components/slate/SlateContainer';
@@ -39,6 +40,7 @@ import { ThresholdBarView } from './components/bar/ThresholdBarView';
 import { ThreeKeysDossier } from './components/keys/ThreeKeysDossier';
 import { PrologueView } from './components/prologue/PrologueView';
 import { VaultZeroEndgameView } from './components/endgame/VaultZeroEndgameView';
+import { DirectorModeView } from './components/director/DirectorModeView';
 import { getVaultZeroGateStatus } from './engine/keysEngine';
 import { MAP_NODES, MapNode } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
@@ -56,6 +58,7 @@ export const App: React.FC = () => {
   const [activePerkTrigger, setActivePerkTrigger] = useState<string | null>(null);
   const [showPrologue, setShowPrologue] = useState(false);
   const [isEndgameActive, setIsEndgameActive] = useState(false);
+  const [isDirectorModeActive, setIsDirectorModeActive] = useState(false);
 
   // Store state bindings
   const storeState = useGameStore();
@@ -229,8 +232,15 @@ export const App: React.FC = () => {
             }}
             onEnterDirectorMode={() => {
               setIsEndgameActive(false);
-              setActiveTab('bar');
-              setBarSubView('taproom');
+              setIsDirectorModeActive(true);
+            }}
+          />
+        </main>
+      ) : isDirectorModeActive ? (
+        <main className="flex-1 overflow-hidden flex flex-col">
+          <DirectorModeView
+            onClose={() => {
+              setIsDirectorModeActive(false);
             }}
           />
         </main>
@@ -270,6 +280,18 @@ export const App: React.FC = () => {
                     title="Launch or replay the 5-beat scripted Origin Prologue"
                   >
                     PROLOGUE // ORIGIN
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setIsDirectorModeActive(true);
+                    }}
+                    className="px-2.5 py-1 text-[10px] font-bold rounded font-mono border border-cyan-800 bg-cyan-950/40 text-cyan-300 hover:text-cyan-100 hover:border-cyan-500 transition-colors flex items-center gap-1"
+                    title="Access Director Mode Sandbox & Multi-Cell Autonomous Operations"
+                  >
+                    <Sliders className="w-3.5 h-3.5" />
+                    DIRECTOR MODE
                   </button>
 
                   <span className={`px-2.5 py-1 text-[11px] font-bold rounded font-mono border flex items-center gap-1.5 ${
@@ -717,7 +739,7 @@ export const App: React.FC = () => {
             <span className={`w-1.5 h-1.5 rounded-full ${isInterrupt ? 'bg-crisis animate-ping' : 'bg-hazard'}`} />
             {isInterrupt ? 'OUROBOROS WARNING: THREAT INTERCEPT ACTIVE' : 'OUROBOROS KERNEL: OPERATIONAL'}
           </span>
-          <span>PHASE 23: VAULT ZERO ENDGAME & BRANCHING FINALES</span>
+          <span>PHASE 24: POST-GAME DIRECTOR MODE & MULTI-CELL SQUADS</span>
         </footer>
       </main>
       )}
