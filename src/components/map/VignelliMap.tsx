@@ -144,6 +144,15 @@ export const VignelliMap: React.FC<VignelliMapProps> = ({
               onClick={() => handleNodeClick(node)}
               className="cursor-pointer group"
             >
+              {/* Invisible Hit Area to guarantee easy, stable clicking */}
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r="22"
+                fill="transparent"
+                className="cursor-pointer"
+              />
+
               {/* Active Player Position Halo Ping */}
               {isActive && (
                 <circle
@@ -151,9 +160,9 @@ export const VignelliMap: React.FC<VignelliMapProps> = ({
                   cy={node.y}
                   r="16"
                   fill="none"
-                  stroke="#facc15"
+                  stroke="#f59e0b"
                   strokeWidth="2"
-                  className="animate-ping opacity-60"
+                  className="animate-ping opacity-60 pointer-events-none"
                 />
               )}
 
@@ -162,12 +171,12 @@ export const VignelliMap: React.FC<VignelliMapProps> = ({
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r="12"
+                  r="13"
                   fill="none"
-                  stroke="#38bdf8"
+                  stroke="#fbbf24"
                   strokeWidth="1.5"
                   strokeDasharray="3 3"
-                  className="animate-pulse"
+                  className="animate-pulse pointer-events-none"
                 />
               )}
 
@@ -175,38 +184,39 @@ export const VignelliMap: React.FC<VignelliMapProps> = ({
               <circle
                 cx={node.x}
                 cy={node.y}
-                r={isSelected ? "9" : "7"}
-                fill="#0a0a0c"
+                r={isSelected ? 9 : 7}
+                fill="#000000"
                 stroke={
                   isSelected
-                    ? '#facc15'
+                    ? '#f59e0b'
                     : isActive
-                    ? '#facc15'
+                    ? '#f59e0b'
                     : isAdjacent
-                    ? '#38bdf8'
-                    : '#f4f4f5'
+                    ? '#fbbf24'
+                    : '#ffffff'
                 }
-                strokeWidth={isSelected || isActive ? "3" : "2"}
-                className="transition-all duration-150 group-hover:scale-125"
+                strokeWidth={isSelected || isActive ? 3 : 2}
+                className="transition-colors duration-150 group-hover:stroke-amber-400 group-hover:stroke-[3px]"
               />
 
               {/* Station Inner Core Pip */}
               <circle
                 cx={node.x}
                 cy={node.y}
-                r={isActive ? "4" : "2.5"}
-                fill={isActive ? '#facc15' : isSelected ? '#facc15' : '#71717a'}
+                r={isActive ? 4 : 2.5}
+                fill={isActive ? '#f59e0b' : isSelected ? '#fbbf24' : '#71717a'}
+                className="pointer-events-none"
               />
 
               {/* Vignelli Typography Station Label */}
               <text
                 x={node.x + 12}
                 y={node.y + 4}
-                fill={isActive ? '#facc15' : isSelected ? '#facc15' : '#e4e4e7'}
+                fill={isActive ? '#f59e0b' : isSelected ? '#fbbf24' : '#e4e4e7'}
                 fontSize="11"
                 fontWeight={isActive || isSelected ? 'bold' : 'normal'}
                 letterSpacing="0.05em"
-                className="select-none pointer-events-none group-hover:fill-hazard"
+                className="select-none pointer-events-none group-hover:fill-amber-300 transition-colors"
               >
                 {node.code} // {node.name}
               </text>
