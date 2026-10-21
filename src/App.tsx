@@ -22,12 +22,14 @@ import { handleMissInterruptTrigger, resolveInterruptCrisis } from './engine/int
 import { ShiftDial } from './components/slate/ShiftDial';
 import { executeShiftAdvance } from './engine/shifts';
 import { RosterView } from './components/roster/RosterView';
+import { SafehouseView } from './components/safehouse/SafehouseView';
 import { CompanionBanterBox } from './components/companions/CompanionBanterBox';
 import { getRandomBanter, BanterLine } from './data/companionBanter';
 import { evaluateCompanionSynergy, applyMissionMoraleShift } from './engine/synergy';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
+  const [barSubView, setBarSubView] = useState<'taproom' | 'safehouse'>('taproom');
   const [currentRoll, setCurrentRoll] = useState<DetailedRollResult | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [requestHelpOut, setRequestHelpOut] = useState(true);
@@ -378,67 +380,111 @@ export const App: React.FC = () => {
         )}
 
         {activeTab === 'bar' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-noir-border pb-3">
+          <div className="space-y-5">
+            {/* Sub-view toggle between Taproom Sanctuary and Safehouse Workstations */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-noir-border pb-3">
               <div>
-                <h3 className="font-bold text-base text-noir-chalk font-mono">THE THRESHOLD BAR (SANCTUARY)</h3>
-                <p className="text-xs text-noir-muted">1860s Impossible Taproom. Safehouse hub and tollgate.</p>
+                <h3 className="font-bold text-base text-noir-chalk font-mono">THE THRESHOLD BAR // SAFE HOUSE</h3>
+                <p className="text-xs text-noir-muted">1860s Impossible Taproom & Clandestine Agency Headquarters.</p>
               </div>
-              <SlateButton
-                variant="hazard"
-                onClick={() => restAtBar()}
-              >
-                REST & CLEAR FATIGUE
-              </SlateButton>
+
+              <div className="flex items-center gap-2">
+                <div className="flex rounded border border-noir-border bg-noir-surface p-0.5 text-xs font-mono">
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setBarSubView('taproom');
+                    }}
+                    className={`px-3 py-1 rounded transition-colors ${
+                      barSubView === 'taproom' 
+                        ? 'bg-hazard text-noir-ink font-bold' 
+                        : 'text-noir-muted hover:text-noir-chalk'
+                    }`}
+                  >
+                    TAPROOM & WAKES
+                  </button>
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setBarSubView('safehouse');
+                    }}
+                    className={`px-3 py-1 rounded transition-colors ${
+                      barSubView === 'safehouse' 
+                        ? 'bg-hazard text-noir-ink font-bold' 
+                        : 'text-noir-muted hover:text-noir-chalk'
+                    }`}
+                  >
+                    WORKSTATION DISPATCH
+                  </button>
+                </div>
+
+                <SlateButton
+                  variant="hazard"
+                  onClick={() => restAtBar()}
+                >
+                  REST & CLEAR FATIGUE
+                </SlateButton>
+              </div>
             </div>
 
-            {/* Pending Wakes Tollgate Alert */}
-            {pendingWakes.length > 0 ? (
-              <div className="p-5 rounded-lg border-2 border-crisis bg-crisis/10 space-y-4">
-                <div className="flex items-center gap-2 text-crisis font-bold font-mono">
-                  <Skull className="w-5 h-5 animate-pulse" />
-                  <span>TOLLGATE ALERT: {pendingWakes.length} FALLEN OPERATIVE(S) AWAIT WAKE</span>
-                </div>
-                <p className="text-xs text-zinc-300">
-                  The wooden counter of the 1860s bar is ready for the carving of the notch. 
-                  You must hold vigil or dismiss their sacrifice.
-                </p>
-                <div className="space-y-2">
-                  {pendingWakes.map((deadId) => {
-                    const fallenOp = roster.find(o => o.id === deadId);
-                    return (
-                      <div key={deadId} className="flex items-center justify-between p-3 rounded bg-noir-ink border border-crisis/40 text-xs font-mono">
-                        <div>
-                          <strong className="text-crisis">{fallenOp?.name} ({fallenOp?.callsign})</strong>
-                          <p className="text-[10px] text-noir-muted">{fallenOp?.epitaphLedger[fallenOp.epitaphLedger.length - 1]}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <SlateButton
-                            variant="hazard"
-                            onClick={() => resolveWake(deadId, true)}
-                          >
-                            ATTEND WAKE (+MORALE)
-                          </SlateButton>
-                          <SlateButton
-                            variant="neutral"
-                            onClick={() => resolveWake(deadId, false)}
-                          >
-                            BLOW OFF (-MORALE)
-                          </SlateButton>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+            {barSubView === 'safehouse' ? (
+              <SafehouseView
+                roster={roster}
+                activeCompanionId={storeState.activeCompanionId}
+                chipCred={storeState.economy.chipCred}
+                digitalCred={storeState.economy.digitalCred}
+              />
             ) : (
-              <div className="p-6 rounded-lg border border-noir-border bg-noir-ink/40 text-center space-y-3 font-mono">
-                <AlertCircle className="w-8 h-8 text-hazard mx-auto opacity-70" />
-                <h4 className="font-bold text-sm text-noir-chalk">THE COUNTER BEARS {notchesOnBar} NOTCHES</h4>
-                <p className="text-xs text-noir-muted max-w-md mx-auto">
-                  External city storms cannot penetrate this taproom. 
-                  The grandfather clock ticks methodically. No pending funerals at this hour.
-                </p>
+              <div className="space-y-6">
+                {/* Pending Wakes Tollgate Alert */}
+                {pendingWakes.length > 0 ? (
+                  <div className="p-5 rounded-lg border-2 border-crisis bg-crisis/10 space-y-4">
+                    <div className="flex items-center gap-2 text-crisis font-bold font-mono">
+                      <Skull className="w-5 h-5 animate-pulse" />
+                      <span>TOLLGATE ALERT: {pendingWakes.length} FALLEN OPERATIVE(S) AWAIT WAKE</span>
+                    </div>
+                    <p className="text-xs text-zinc-300">
+                      The wooden counter of the 1860s bar is ready for the carving of the notch. 
+                      You must hold vigil or dismiss their sacrifice.
+                    </p>
+                    <div className="space-y-2">
+                      {pendingWakes.map((deadId) => {
+                        const fallenOp = roster.find(o => o.id === deadId);
+                        return (
+                          <div key={deadId} className="flex items-center justify-between p-3 rounded bg-noir-ink border border-crisis/40 text-xs font-mono">
+                            <div>
+                              <strong className="text-crisis">{fallenOp?.name} ({fallenOp?.callsign})</strong>
+                              <p className="text-[10px] text-noir-muted">{fallenOp?.epitaphLedger[fallenOp.epitaphLedger.length - 1]}</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <SlateButton
+                                variant="hazard"
+                                onClick={() => resolveWake(deadId, true)}
+                              >
+                                ATTEND WAKE (+MORALE)
+                              </SlateButton>
+                              <SlateButton
+                                variant="neutral"
+                                onClick={() => resolveWake(deadId, false)}
+                              >
+                                BLOW OFF (-MORALE)
+                              </SlateButton>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-lg border border-noir-border bg-noir-ink/40 text-center space-y-3 font-mono">
+                    <AlertCircle className="w-8 h-8 text-hazard mx-auto opacity-70" />
+                    <h4 className="font-bold text-sm text-noir-chalk">THE COUNTER BEARS {notchesOnBar} NOTCHES</h4>
+                    <p className="text-xs text-noir-muted max-w-md mx-auto">
+                      External city storms cannot penetrate this taproom. 
+                      The grandfather clock ticks methodically. No pending funerals at this hour.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
