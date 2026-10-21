@@ -8,11 +8,13 @@ import {
   VolumeX, 
   Maximize2, 
   Minimize2,
-  Sliders
+  Sliders,
+  HardDrive
 } from 'lucide-react';
 import { useGameStore } from '../../engine/store';
 import { soundFx } from '../../audio/soundFx';
 import { AudioSettingsModal } from '../audio/AudioSettingsModal';
+import { SaveManagerModal } from '../modals/SaveManagerModal';
 
 interface SlateHeaderProps {
   isTilted: boolean;
@@ -28,6 +30,7 @@ export const SlateHeader: React.FC<SlateHeaderProps> = ({
   onToggleMute,
 }) => {
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const time = useGameStore((state) => state.time);
   const agentZero = useGameStore((state) => state.agentZero);
   const economy = useGameStore((state) => state.economy);
@@ -134,6 +137,17 @@ export const SlateHeader: React.FC<SlateHeaderProps> = ({
 
             <button
               onClick={() => {
+                soundFx.playTerminalKeystroke();
+                setIsSaveModalOpen(true);
+              }}
+              title="Open Memory Core Archive // Save & Load Engine"
+              className="p-1 rounded text-noir-muted hover:text-hazard transition-colors"
+            >
+              <HardDrive className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => {
                 soundFx.playClick();
                 onToggleTilt();
               }}
@@ -149,6 +163,11 @@ export const SlateHeader: React.FC<SlateHeaderProps> = ({
       <AudioSettingsModal 
         isOpen={isAudioModalOpen}
         onClose={() => setIsAudioModalOpen(false)}
+      />
+
+      <SaveManagerModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
       />
     </>
   );

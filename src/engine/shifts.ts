@@ -6,6 +6,7 @@ import { useGameStore } from './store';
 import { soundFx } from '../audio/soundFx';
 import { applyNaturalHeatDecay } from './hostilityEngine';
 import { processDailyAnomalyEcology, AnomalyMigrationEvent } from './anomalyEngine';
+import { persistenceEngine } from './persistenceEngine';
 
 export interface ShiftTransitionReport {
   previousShift: Shift;
@@ -119,6 +120,7 @@ export function executeShiftAdvance(options?: {
   });
 
   soundFx.playClick();
+  persistenceEngine.autoSave();
 
   return {
     previousShift: prevShift,
