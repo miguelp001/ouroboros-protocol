@@ -28,12 +28,14 @@ import { getRandomBanter, BanterLine } from './data/companionBanter';
 import { evaluateCompanionSynergy, applyMissionMoraleShift } from './engine/synergy';
 import { VignelliMap } from './components/map/VignelliMap';
 import { NodeTelemetryCard } from './components/map/NodeTelemetryCard';
+import { HostilityMonitor } from './components/hostility/HostilityMonitor';
 import { MAP_NODES, MapNode } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SlateTabId>('slate');
   const [barSubView, setBarSubView] = useState<'taproom' | 'safehouse'>('taproom');
+  const [mapSubView, setMapSubView] = useState<'vignelli' | 'hostility'>('vignelli');
   const [currentRoll, setCurrentRoll] = useState<DetailedRollResult | null>(null);
   const [isRolling, setIsRolling] = useState(false);
   const [requestHelpOut, setRequestHelpOut] = useState(true);
@@ -330,38 +332,76 @@ export const App: React.FC = () => {
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-noir-border pb-3">
               <div>
-                <h3 className="font-bold text-base text-noir-chalk font-mono">VIGNELLI TRANSIT SCHEMATIC</h3>
+                <h3 className="font-bold text-base text-noir-chalk font-mono">
+                  {mapSubView === 'vignelli' ? 'VIGNELLI TRANSIT SCHEMATIC' : 'REGIONAL HOSTILITY & PATROL MONITOR'}
+                </h3>
                 <p className="text-xs text-noir-muted">Sub-surface transit lines and regional anomaly clusters.</p>
               </div>
-              <div className="text-xs font-mono text-hazard flex items-center gap-2">
-                <span>ACTIVE NODE:</span>
-                <strong className="text-noir-chalk bg-noir-surface px-2 py-0.5 rounded border border-noir-border">
-                  {activeLocation} // {MAP_NODES[activeLocation]?.name ?? 'UNKNOWN'}
-                </strong>
+              <div className="flex items-center gap-2">
+                <div className="flex rounded border border-noir-border bg-noir-surface p-0.5 text-xs font-mono">
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setMapSubView('vignelli');
+                    }}
+                    className={`px-3 py-1 rounded transition-colors ${
+                      mapSubView === 'vignelli' 
+                        ? 'bg-hazard text-noir-ink font-bold' 
+                        : 'text-noir-muted hover:text-noir-chalk'
+                    }`}
+                  >
+                    TRANSIT MAP
+                  </button>
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setMapSubView('hostility');
+                    }}
+                    className={`px-3 py-1 rounded transition-colors ${
+                      mapSubView === 'hostility' 
+                        ? 'bg-hazard text-noir-ink font-bold' 
+                        : 'text-noir-muted hover:text-noir-chalk'
+                    }`}
+                  >
+                    HEAT & SUSPICION
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Interactive Vector Subway Schematic */}
-            <VignelliMap
-              activeLocationId={activeLocation}
-              selectedNodeId={selectedMapNode.id}
-              onSelectNode={(node) => setSelectedMapNode(node)}
-              adjacentNodeIds={getAdjacentNodes(activeLocation)}
-            />
+            {mapSubView === 'vignelli' ? (
+              <>
+                {/* Interactive Vector Subway Schematic */}
+                <VignelliMap
+                  activeLocationId={activeLocation}
+                  selectedNodeId={selectedMapNode.id}
+                  onSelectNode={(node) => setSelectedMapNode(node)}
+                  adjacentNodeIds={getAdjacentNodes(activeLocation)}
+                />
 
-            {/* Selected Node Telemetry Card */}
-            <NodeTelemetryCard
-              node={selectedMapNode}
-              isCurrentLocation={selectedMapNode.id === activeLocation}
-              travelCheck={canTravelToNode(activeLocation, selectedMapNode.id, storeState.agency.keys)}
-              currentSectorHeat={storeState.economy.heat[selectedMapNode.sector] ?? 0}
-              onInitiateTravel={(nodeId) => {
-                const res = travelToDestination(nodeId);
-                if (res.success) {
-                  setSelectedMapNode(MAP_NODES[nodeId] ?? selectedMapNode);
-                }
-              }}
-            />
+                {/* Selected Node Telemetry Card */}
+                <NodeTelemetryCard
+                  node={selectedMapNode}
+                  isCurrentLocation={selectedMapNode.id === activeLocation}
+                  travelCheck={canTravelToNode(activeLocation, selectedMapNode.id, storeState.agency.keys)}
+                  currentSectorHeat={storeState.economy.heat[selectedMapNode.sector] ?? 0}
+                  onInitiateTravel={(nodeId) => {
+                    const res = travelToDestination(nodeId);
+                    if (res.success) {
+                      setSelectedMapNode(MAP_NODES[nodeId] ?? selectedMapNode);
+                    }
+                  }}
+                />
+              </>
+            ) : (
+              <HostilityMonitor
+                heatMap={storeState.economy.heat}
+                factions={storeState.factions}
+                chipCred={storeState.economy.chipCred}
+                digitalCred={storeState.economy.digitalCred}
+                activeCompanionId={storeState.activeCompanionId}
+              />
+            )}
           </div>
         )}
 

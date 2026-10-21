@@ -4,6 +4,7 @@
 import { Shift } from '../types';
 import { useGameStore } from './store';
 import { soundFx } from '../audio/soundFx';
+import { applyNaturalHeatDecay } from './hostilityEngine';
 
 export interface ShiftTransitionReport {
   previousShift: Shift;
@@ -94,6 +95,7 @@ export function executeShiftAdvance(options?: {
   let newAgentHp = store.agentZero.hp;
   if (isResting) {
     newAgentHp = store.agentZero.maxHp;
+    applyNaturalHeatDecay();
   }
 
   // Update state store
