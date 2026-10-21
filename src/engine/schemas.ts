@@ -140,4 +140,11 @@ export const GameEngineStateSchema = z.object({
   pendingWakes: z.array(z.string()),
   factions: z.record(FactionSchema),
   notchesOnBar: z.number().int().min(0),
+  isGameOver: z.boolean().optional(),
+  gameOverReason: z.enum(['SOLO_AGENT_FALLEN', 'ALL_OPERATIVES_LOST']).nullable().optional(),
+  lastExtractionNotice: z.object({
+    companionName: z.string(),
+    callsign: z.string(),
+    locationTag: z.string(),
+  }).nullable().optional(),
 });

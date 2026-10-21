@@ -361,4 +361,7 @@ export const INITIAL_GAME_STATE: GameEngineState = {
   pendingWakes: [],
   factions: INITIAL_FACTIONS,
   notchesOnBar: 0,
+  isGameOver: false,
+  gameOverReason: null,
+  lastExtractionNotice: null,
 };

@@ -30,6 +30,9 @@ import { VignelliMap } from './components/map/VignelliMap';
 import { NodeTelemetryCard } from './components/map/NodeTelemetryCard';
 import { HostilityMonitor } from './components/hostility/HostilityMonitor';
 import { FactionFrontsMonitor } from './components/factions/FactionFrontsMonitor';
+import { GameOverModal } from './components/modals/GameOverModal';
+import { CatastrophicExtractionModal } from './components/modals/CatastrophicExtractionModal';
+import { TaproomSeating } from './components/bar/TaproomSeating';
 import { MAP_NODES, MapNode } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
 
@@ -581,6 +584,8 @@ export const App: React.FC = () => {
                     </p>
                   </div>
                 )}
+                {/* Permadeath Physical Seating Along Mahogany Counter */}
+                <TaproomSeating roster={roster} />
               </div>
             )}
           </div>
@@ -592,9 +597,33 @@ export const App: React.FC = () => {
             <span className={`w-1.5 h-1.5 rounded-full ${isInterrupt ? 'bg-crisis animate-ping' : 'bg-hazard'}`} />
             {isInterrupt ? 'OUROBOROS WARNING: THREAT INTERCEPT ACTIVE' : 'OUROBOROS KERNEL: OPERATIONAL'}
           </span>
-          <span>PHASE 6: INTERRUPT DECK & CRISIS INTERCEPTOR ACTIVE</span>
+          <span>PHASE 14: PERMADEATH & CATASTROPHIC EXTRACTION PROTOCOL ACTIVE</span>
         </footer>
       </main>
+
+      {/* Catastrophic Extraction Protocol Modal */}
+      {storeState.lastExtractionNotice && (
+        <CatastrophicExtractionModal
+          fallenCompanion={{
+            name: storeState.lastExtractionNotice.companionName,
+            callsign: storeState.lastExtractionNotice.callsign,
+          } as any}
+          locationTag={storeState.lastExtractionNotice.locationTag}
+          onAcknowledge={() => {
+            storeState.clearExtractionNotice();
+            setActiveTab('bar');
+            setBarSubView('taproom');
+          }}
+        />
+      )}
+
+      {/* True Game Over Terminal Modal */}
+      {storeState.isGameOver && (
+        <GameOverModal
+          reason={storeState.gameOverReason ?? 'SOLO_AGENT_FALLEN'}
+          onResetGame={() => storeState.resetGame()}
+        />
+      )}
     </SlateContainer>
   );
 };

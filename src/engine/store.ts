@@ -8,6 +8,11 @@ import {
 } from '../types';
 import { INITIAL_GAME_STATE } from './initialState';
 import { advanceAllFactionClocks } from './factionEngine';
+import { 
+  processAgentZeroDamage, 
+  executePermanentCompanionDeath, 
+  GameOverReason 
+} from './permadeathEngine';
 
 export interface GameEngineStore extends GameEngineState {
   // Time & Shift Actions
@@ -27,7 +32,14 @@ export interface GameEngineStore extends GameEngineState {
   addKey: (key: string) => void;
 
   // Agent 0 Vitals & Catastrophic Extraction
-  modifyAgentZeroHp: (delta: number) => { triggeredExtraction: boolean; fallenCompanion: Operative | null };
+  modifyAgentZeroHp: (delta: number) => { 
+    triggeredExtraction: boolean; 
+    fallenCompanion: Operative | null;
+    isGameOver?: boolean;
+    gameOverReason?: GameOverReason | null;
+    incidentReport?: string;
+  };
+  clearExtractionNotice: () => void;
 
   // Roster & Companions
   recruitOperative: (id: string) => void;
@@ -210,66 +222,11 @@ export const useGameStore = create<GameEngineStore>((set, get) => ({
   },
 
   modifyAgentZeroHp: (delta) => {
-    const state = get();
-    const newHp = state.agentZero.hp + delta;
+    return processAgentZeroDamage(delta);
+  },
 
-    if (newHp > 0) {
-      set({
-        agentZero: {
-          ...state.agentZero,
-          hp: Math.min(state.agentZero.maxHp, newHp),
-        },
-      });
-      return { triggeredExtraction: false, fallenCompanion: null };
-    }
-
-    // Catastrophic Extraction Protocol Triggered!
-    let fallenCompanion: Operative | null = null;
-    let nextRoster = state.roster;
-    let nextWakes = [...state.pendingWakes];
-
-    if (state.activeCompanionId) {
-      const companion = state.roster.find((op) => op.id === state.activeCompanionId);
-      if (companion && companion.status === 'ACTIVE') {
-        fallenCompanion = companion;
-        nextWakes.push(companion.id);
-        nextRoster = state.roster.map((op) => {
-          if (op.id === companion.id) {
-            return {
-              ...op,
-              status: 'DEAD' as const,
-              hp: 0,
-              epitaphLedger: [
-                ...op.epitaphLedger,
-                `Killed in action covering Agent 0 during Catastrophic Extraction at ${state.activeLocation}.`,
-              ],
-            };
-          }
-          return op;
-        });
-      }
-    }
-
-    // Agent 0 emergency vents to Bar with 1 HP, heat spikes
-    set({
-      agentZero: {
-        ...state.agentZero,
-        hp: 1,
-      },
-      activeLocation: 'THRESHOLD_BAR',
-      activeCompanionId: null,
-      roster: nextRoster,
-      pendingWakes: nextWakes,
-      economy: {
-        ...state.economy,
-        heat: {
-          ...state.economy.heat,
-          [state.activeLocation.toLowerCase()]: Math.min(5, (state.economy.heat[state.activeLocation.toLowerCase()] ?? 1) + 2),
-        },
-      },
-    });
-
-    return { triggeredExtraction: true, fallenCompanion };
+  clearExtractionNotice: () => {
+    set({ lastExtractionNotice: null });
   },
 
   recruitOperative: (id) => {
@@ -334,19 +291,7 @@ export const useGameStore = create<GameEngineStore>((set, get) => ({
   },
 
   markOperativeFallen: (id, cause) => {
-    set((state) => ({
-      roster: state.roster.map((op) => {
-        if (op.id !== id) return op;
-        return {
-          ...op,
-          status: 'DEAD' as const,
-          hp: 0,
-          epitaphLedger: [...op.epitaphLedger, cause],
-        };
-      }),
-      pendingWakes: [...state.pendingWakes, id],
-      activeCompanionId: state.activeCompanionId === id ? null : state.activeCompanionId,
-    }));
+    executePermanentCompanionDeath(id, cause);
   },
 
   resolveWake: (id, attended) => {

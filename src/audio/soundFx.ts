@@ -170,6 +170,69 @@ class SlateAudioEngine {
       osc.stop(now + offset + 0.18);
     });
   }
+
+  // Emergency Extraction Protocol Audio: High-frequency telemetry burst followed by deep dimensional snap
+  public playEmergencyExtraction() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    
+    // Telemetry ping surge
+    const chirp = ctx.createOscillator();
+    const chirpGain = ctx.createGain();
+    chirp.type = 'sawtooth';
+    chirp.frequency.setValueAtTime(2200, now);
+    chirp.frequency.exponentialRampToValueAtTime(110, now + 0.25);
+
+    chirpGain.gain.setValueAtTime(0.3, now);
+    chirpGain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+    chirp.connect(chirpGain);
+    chirpGain.connect(ctx.destination);
+    chirp.start(now);
+    chirp.stop(now + 0.25);
+
+    // Deep sub-bass dimensional implosion
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(90, now + 0.08);
+    sub.frequency.exponentialRampToValueAtTime(25, now + 0.5);
+
+    subGain.gain.setValueAtTime(0.4, now + 0.08);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+    sub.connect(subGain);
+    subGain.connect(ctx.destination);
+    sub.start(now + 0.08);
+    sub.stop(now + 0.5);
+  }
+
+  // Flatline & Game Over Tone: Long eerie sine flatline with low dissonance
+  public playFlatline() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(740, now);
+    osc.frequency.setValueAtTime(740, now + 1.2);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 1.8);
+
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.setValueAtTime(0.25, now + 1.2);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 1.8);
+  }
 }
 
 export const soundFx = new SlateAudioEngine();
