@@ -93,10 +93,11 @@ export interface VaultZeroLockState {
 /**
  * Returns the live lock status of the Vault Zero Triple-Lock Gate at Terminus Zero (X-03).
  */
-export function getVaultZeroGateStatus(playerKeys: string[]): VaultZeroLockState {
-  const hasThreshold = playerKeys.includes('THRESHOLD_KEY');
-  const hasSkeleton = playerKeys.includes('SKELETON_KEY');
-  const hasGhost = playerKeys.includes('GHOST_KEY');
+export function getVaultZeroGateStatus(playerKeys?: string[]): VaultZeroLockState {
+  const keys = playerKeys ?? useGameStore.getState().agency?.keys ?? [];
+  const hasThreshold = keys.includes('THRESHOLD_KEY');
+  const hasSkeleton = keys.includes('SKELETON_KEY');
+  const hasGhost = keys.includes('GHOST_KEY');
 
   const unlockedCount = (hasThreshold ? 1 : 0) + (hasSkeleton ? 1 : 0) + (hasGhost ? 1 : 0);
   const allUnlocked = unlockedCount === 3;

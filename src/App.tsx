@@ -4,7 +4,8 @@ import {
   Users,
   Layers,
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  Key
 } from 'lucide-react';
 import { useGameStore } from './engine/store';
 import { SlateContainer } from './components/slate/SlateContainer';
@@ -37,6 +38,8 @@ import { WakeTollgateModal } from './components/modals/WakeTollgateModal';
 import { ThresholdBarView } from './components/bar/ThresholdBarView';
 import { ThreeKeysDossier } from './components/keys/ThreeKeysDossier';
 import { PrologueView } from './components/prologue/PrologueView';
+import { VaultZeroEndgameView } from './components/endgame/VaultZeroEndgameView';
+import { getVaultZeroGateStatus } from './engine/keysEngine';
 import { MAP_NODES, MapNode } from './data/transitMapData';
 import { getAdjacentNodes, canTravelToNode, travelToDestination } from './engine/transitEngine';
 
@@ -52,6 +55,7 @@ export const App: React.FC = () => {
   const [companionBanter, setCompanionBanter] = useState<BanterLine | null>(null);
   const [activePerkTrigger, setActivePerkTrigger] = useState<string | null>(null);
   const [showPrologue, setShowPrologue] = useState(false);
+  const [isEndgameActive, setIsEndgameActive] = useState(false);
 
   // Store state bindings
   const storeState = useGameStore();
@@ -73,6 +77,7 @@ export const App: React.FC = () => {
   const resolveWake = storeState.resolveWake;
 
   const activeCompanion = roster.find((op) => op.id === storeState.activeCompanionId);
+  const gateStatus = getVaultZeroGateStatus();
 
   // Synchronize Diegetic Ambient Soundscape with smooth crossfade on location or tab change
   useEffect(() => {
@@ -214,6 +219,21 @@ export const App: React.FC = () => {
         <main className="flex-1 overflow-hidden flex flex-col">
           <PrologueView onComplete={() => setShowPrologue(false)} />
         </main>
+      ) : isEndgameActive ? (
+        <main className="flex-1 overflow-hidden flex flex-col">
+          <VaultZeroEndgameView
+            onComplete={() => {
+              setIsEndgameActive(false);
+              setActiveTab('bar');
+              setBarSubView('taproom');
+            }}
+            onEnterDirectorMode={() => {
+              setIsEndgameActive(false);
+              setActiveTab('bar');
+              setBarSubView('taproom');
+            }}
+          />
+        </main>
       ) : (
         <main className="flex-1 p-5 md:p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
           {activeTab === 'slate' && (
@@ -227,6 +247,20 @@ export const App: React.FC = () => {
                   </h2>
                 </div>
                 <div className="flex items-center gap-2">
+                  {gateStatus.allUnlocked && (
+                    <button
+                      onClick={() => {
+                        soundFx.playKeyUnlock();
+                        setIsEndgameActive(true);
+                      }}
+                      className="px-2.5 py-1 text-[10px] font-bold rounded font-mono border border-emerald-500 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-500 hover:text-noir-ink transition-colors flex items-center gap-1 animate-pulse"
+                      title="All 3 Keys in possession. Engage the Triple-Lock Gate and penetrate Vault Zero"
+                    >
+                      <Key className="w-3.5 h-3.5" />
+                      BREACH VAULT ZERO
+                    </button>
+                  )}
+
                   <button
                     onClick={() => {
                       soundFx.playClick();
@@ -683,7 +717,7 @@ export const App: React.FC = () => {
             <span className={`w-1.5 h-1.5 rounded-full ${isInterrupt ? 'bg-crisis animate-ping' : 'bg-hazard'}`} />
             {isInterrupt ? 'OUROBOROS WARNING: THREAT INTERCEPT ACTIVE' : 'OUROBOROS KERNEL: OPERATIONAL'}
           </span>
-          <span>PHASE 20: THE PROLOGUE SCRIPT & SINK ONBOARDING ACTIVE</span>
+          <span>PHASE 23: VAULT ZERO ENDGAME & BRANCHING FINALES</span>
         </footer>
       </main>
       )}
