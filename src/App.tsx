@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Skull,
   Users,
@@ -13,6 +13,7 @@ import { SlateButton } from './components/slate/SlateButton';
 import { DiceTray } from './components/dice/DiceTray';
 import { StoryletCard } from './components/storylet/StoryletCard';
 import { soundFx } from './audio/soundFx';
+import { ambientAudioEngine, AmbientSector } from './audio/ambientAudioEngine';
 import { executePbtARoll, DetailedRollResult } from './engine/pbta';
 import { SINK_STORYLETS } from './data/storylets/sinkStorylets';
 import { filterActiveStoryletDeck, executeStateMutations } from './engine/qbn/evaluator';
@@ -70,6 +71,20 @@ export const App: React.FC = () => {
   const resolveWake = storeState.resolveWake;
 
   const activeCompanion = roster.find((op) => op.id === storeState.activeCompanionId);
+
+  // Synchronize Diegetic Ambient Soundscape with smooth crossfade on location or tab change
+  useEffect(() => {
+    let targetSector: AmbientSector = 'sink';
+    if (activeTab === 'bar' || activeLocation === 'THRESHOLD_BAR' || activeLocation === 'X-01') {
+      targetSector = 'bar';
+    } else {
+      const node = MAP_NODES[activeLocation];
+      if (node && node.sector) {
+        targetSector = node.sector as AmbientSector;
+      }
+    }
+    ambientAudioEngine.setSector(targetSector, 1.0);
+  }, [activeTab, activeLocation]);
 
   // Dynamically compute active QBN deck for current node and world qualities
   const activeDeck = useMemo(() => {
@@ -298,7 +313,7 @@ export const App: React.FC = () => {
                   <button
                     key={card.id}
                     onClick={() => {
-                      soundFx.playClick();
+                      soundFx.playCardDraw();
                       setSelectedCardIndex(idx);
                     }}
                     className={`px-3 py-1.5 rounded border text-[11px] flex items-center gap-1.5 transition-all whitespace-nowrap ${

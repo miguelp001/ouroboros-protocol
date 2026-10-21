@@ -1,36 +1,31 @@
 // Diegetic Web Audio Synthesizer for Ouroboros Protocol
-// Generates authentic CRT hums, tactile relay clicks, static bursts, and dice clatters without external mp3 dependencies.
+// Generates authentic CRT hums, tactile relay clicks, static bursts, card draws,
+// terminal keystrokes, and dice clatters without external mp3 dependencies.
+
+import { audioContextManager } from './audioContext';
 
 class SlateAudioEngine {
-  private ctx: AudioContext | null = null;
-  private isMuted: boolean = false;
-
   private getContext(): AudioContext | null {
-    if (this.isMuted) return null;
-    if (!this.ctx && typeof window !== 'undefined') {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioCtx) {
-        this.ctx = new AudioCtx();
-      }
-    }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
-    return this.ctx;
+    return audioContextManager.getContext();
+  }
+
+  private getDestination(ctx: AudioContext): AudioNode {
+    return audioContextManager.getSfxBus() ?? ctx.destination;
   }
 
   public setMuted(muted: boolean) {
-    this.isMuted = muted;
+    audioContextManager.setMuted(muted);
   }
 
   public getMuted(): boolean {
-    return this.isMuted;
+    return audioContextManager.getSettings().isMuted;
   }
 
   // Tactile Slate Mechanical Click (Physical Relay Switch)
   public playClick() {
     const ctx = this.getContext();
     if (!ctx) return;
+    const dest = this.getDestination(ctx);
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -43,16 +38,105 @@ class SlateAudioEngine {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(dest);
 
     osc.start();
     osc.stop(ctx.currentTime + 0.04);
+  }
+
+  // Tactile Paper Card Slide / Draw from Deck
+  public playCardDraw() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    const dest = this.getDestination(ctx);
+    const now = ctx.currentTime;
+
+    // Layer 1: Friction noise slide
+    const bufferSize = Math.floor(ctx.sampleRate * 0.09);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.sin((Math.PI * i) / bufferSize);
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1600, now);
+    filter.frequency.exponentialRampToValueAtTime(650, now + 0.09);
+    filter.Q.setValueAtTime(2.2, now);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.18, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(dest);
+    noise.start(now);
+
+    // Layer 2: Subtle paper snap
+    const snapOsc = ctx.createOscillator();
+    const snapGain = ctx.createGain();
+    snapOsc.type = 'triangle';
+    snapOsc.frequency.setValueAtTime(540, now + 0.04);
+    snapOsc.frequency.exponentialRampToValueAtTime(160, now + 0.08);
+
+    snapGain.gain.setValueAtTime(0.1, now + 0.04);
+    snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+    snapOsc.connect(snapGain);
+    snapGain.connect(dest);
+    snapOsc.start(now + 0.04);
+    snapOsc.stop(now + 0.08);
+  }
+
+  // Industrial Vintage Mechanical Keyboard Keystroke (Cherry MX Black / IBM Beam Spring style)
+  public playTerminalKeystroke() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    const dest = this.getDestination(ctx);
+    const now = ctx.currentTime;
+
+    // 1. High tactile strike click
+    const clickOsc = ctx.createOscillator();
+    const clickGain = ctx.createGain();
+    clickOsc.type = 'square';
+    clickOsc.frequency.setValueAtTime(2400, now);
+    clickOsc.frequency.exponentialRampToValueAtTime(400, now + 0.015);
+
+    clickGain.gain.setValueAtTime(0.15, now);
+    clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+
+    clickOsc.connect(clickGain);
+    clickGain.connect(dest);
+    clickOsc.start(now);
+    clickOsc.stop(now + 0.015);
+
+    // 2. Plastic bottom-out body resonance
+    const thudOsc = ctx.createOscillator();
+    const thudGain = ctx.createGain();
+    thudOsc.type = 'triangle';
+    thudOsc.frequency.setValueAtTime(320, now + 0.005);
+    thudOsc.frequency.exponentialRampToValueAtTime(80, now + 0.035);
+
+    thudGain.gain.setValueAtTime(0.12, now + 0.005);
+    thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+
+    thudOsc.connect(thudGain);
+    thudGain.connect(dest);
+    thudOsc.start(now + 0.005);
+    thudOsc.stop(now + 0.035);
   }
 
   // CRT Screen Boot / Channel Switch Chime
   public playBoot() {
     const ctx = this.getContext();
     if (!ctx) return;
+    const dest = this.getDestination(ctx);
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -65,7 +149,7 @@ class SlateAudioEngine {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(dest);
 
     osc.start();
     osc.stop(ctx.currentTime + 0.15);
@@ -75,8 +159,9 @@ class SlateAudioEngine {
   public playGlitch() {
     const ctx = this.getContext();
     if (!ctx) return;
+    const dest = this.getDestination(ctx);
 
-    const bufferSize = ctx.sampleRate * 0.18;
+    const bufferSize = Math.floor(ctx.sampleRate * 0.18);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
 
@@ -98,7 +183,7 @@ class SlateAudioEngine {
 
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(dest);
 
     noise.start();
   }
@@ -107,6 +192,7 @@ class SlateAudioEngine {
   public playDiceRoll() {
     const ctx = this.getContext();
     if (!ctx) return;
+    const dest = this.getDestination(ctx);
 
     const now = ctx.currentTime;
     // Series of 3 quick wood clatters
@@ -122,7 +208,7 @@ class SlateAudioEngine {
       gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.05);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(dest);
 
       osc.start(now + offset);
       osc.stop(now + offset + 0.05);
@@ -140,7 +226,7 @@ class SlateAudioEngine {
     finalGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
 
     finalOsc.connect(finalGain);
-    finalGain.connect(ctx.destination);
+    finalGain.connect(dest);
 
     finalOsc.start(now + 0.22);
     finalOsc.stop(now + 0.35);
@@ -150,6 +236,7 @@ class SlateAudioEngine {
   public playWarningAlarm() {
     const ctx = this.getContext();
     if (!ctx) return;
+    const dest = this.getDestination(ctx);
 
     const now = ctx.currentTime;
     [0, 0.22].forEach((offset) => {
@@ -164,7 +251,7 @@ class SlateAudioEngine {
       gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.18);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(dest);
 
       osc.start(now + offset);
       osc.stop(now + offset + 0.18);
@@ -175,7 +262,7 @@ class SlateAudioEngine {
   public playEmergencyExtraction() {
     const ctx = this.getContext();
     if (!ctx) return;
-
+    const dest = this.getDestination(ctx);
     const now = ctx.currentTime;
     
     // Telemetry ping surge
@@ -189,7 +276,7 @@ class SlateAudioEngine {
     chirpGain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
 
     chirp.connect(chirpGain);
-    chirpGain.connect(ctx.destination);
+    chirpGain.connect(dest);
     chirp.start(now);
     chirp.stop(now + 0.25);
 
@@ -204,7 +291,7 @@ class SlateAudioEngine {
     subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
 
     sub.connect(subGain);
-    subGain.connect(ctx.destination);
+    subGain.connect(dest);
     sub.start(now + 0.08);
     sub.stop(now + 0.5);
   }
@@ -213,8 +300,9 @@ class SlateAudioEngine {
   public playFlatline() {
     const ctx = this.getContext();
     if (!ctx) return;
-
+    const dest = this.getDestination(ctx);
     const now = ctx.currentTime;
+
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -228,7 +316,7 @@ class SlateAudioEngine {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(dest);
 
     osc.start(now);
     osc.stop(now + 1.8);
@@ -238,8 +326,9 @@ class SlateAudioEngine {
   public playGlassClink() {
     const ctx = this.getContext();
     if (!ctx) return;
-
+    const dest = this.getDestination(ctx);
     const now = ctx.currentTime;
+
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -251,7 +340,7 @@ class SlateAudioEngine {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(dest);
 
     osc.start(now);
     osc.stop(now + 0.35);
@@ -261,8 +350,9 @@ class SlateAudioEngine {
   public playWoodCarving() {
     const ctx = this.getContext();
     if (!ctx) return;
-
+    const dest = this.getDestination(ctx);
     const now = ctx.currentTime;
+
     [0, 0.08, 0.16].forEach((offset) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -275,7 +365,7 @@ class SlateAudioEngine {
       gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.07);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(dest);
 
       osc.start(now + offset);
       osc.stop(now + offset + 0.07);
@@ -286,8 +376,9 @@ class SlateAudioEngine {
   public playClockTick(isTock: boolean = false) {
     const ctx = this.getContext();
     if (!ctx) return;
-
+    const dest = this.getDestination(ctx);
     const now = ctx.currentTime;
+
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -302,7 +393,7 @@ class SlateAudioEngine {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(dest);
 
     osc.start(now);
     osc.stop(now + 0.05);
@@ -312,8 +403,9 @@ class SlateAudioEngine {
   public playPourWhiskey() {
     const ctx = this.getContext();
     if (!ctx) return;
-
+    const dest = this.getDestination(ctx);
     const now = ctx.currentTime;
+
     // Trickle drops
     [0, 0.05, 0.11, 0.17, 0.23].forEach((offset, idx) => {
       const osc = ctx.createOscillator();
@@ -327,7 +419,7 @@ class SlateAudioEngine {
       gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.04);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(dest);
 
       osc.start(now + offset);
       osc.stop(now + offset + 0.04);
@@ -343,8 +435,9 @@ class SlateAudioEngine {
   public playAnomalyHum() {
     const ctx = this.getContext();
     if (!ctx) return;
-
+    const dest = this.getDestination(ctx);
     const now = ctx.currentTime;
+
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -357,7 +450,7 @@ class SlateAudioEngine {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(dest);
 
     osc.start(now);
     osc.stop(now + 0.3);
@@ -367,7 +460,7 @@ class SlateAudioEngine {
   public playKeyUnlock() {
     const ctx = this.getContext();
     if (!ctx) return;
-
+    const dest = this.getDestination(ctx);
     const now = ctx.currentTime;
     
     // Mechanical tumbler click
@@ -381,7 +474,7 @@ class SlateAudioEngine {
     clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
 
     clickOsc.connect(clickGain);
-    clickGain.connect(ctx.destination);
+    clickGain.connect(dest);
     clickOsc.start(now);
     clickOsc.stop(now + 0.06);
 
@@ -398,7 +491,7 @@ class SlateAudioEngine {
       chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
 
       chimeOsc.connect(chimeGain);
-      chimeGain.connect(ctx.destination);
+      chimeGain.connect(dest);
 
       chimeOsc.start(now + 0.07);
       chimeOsc.stop(now + 0.6);

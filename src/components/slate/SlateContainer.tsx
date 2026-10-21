@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SlateScanlines } from './SlateScanlines';
 import { SlateHeader } from './SlateHeader';
 import { soundFx } from '../../audio/soundFx';
+import { audioContextManager } from '../../audio/audioContext';
 import { useGameStore } from '../../engine/store';
 
 interface SlateContainerProps {
@@ -13,8 +14,15 @@ export const SlateContainer: React.FC<SlateContainerProps> = ({
   children,
 }) => {
   const [isTilted, setIsTilted] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(soundFx.getMuted());
   const isInterrupt = useGameStore((state) => state.isInterrupt);
+
+  useEffect(() => {
+    const unsub = audioContextManager.subscribe((settings) => {
+      setIsMuted(settings.isMuted);
+    });
+    return () => unsub();
+  }, []);
 
   const handleToggleMute = () => {
     const next = !isMuted;
